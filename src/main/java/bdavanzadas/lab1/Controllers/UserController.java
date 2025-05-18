@@ -1,8 +1,15 @@
 package bdavanzadas.lab1.Controllers;
 
 import bdavanzadas.lab1.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 
 import bdavanzadas.lab1.entities.UserEntity;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +26,32 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // Obtener todos los usuarios
+
+
+
+    @Operation(summary = "Obtener todos los usuarios",
+            description = "Retorna una lista de todos los usuarios registrados con sus ubicaciones en formato WKT",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente",
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserEntity.class)))
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Error interno del servidor")}
+    )
+
+
     @GetMapping
     public ResponseEntity<List<UserEntity>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    // Eliminar usuario
+    @Operation(summary = "Eliminar usuario",
+            description = "Elimina un usuario por su ID",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Usuario eliminado exitosamente",
+                            content = @Content(schema = @Schema(example = "{\"success\": true, \"message\": \"Usuario eliminado\"}"))),
+                    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+            })
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable int id) {
         if (userService.deleteUser(id)) {
@@ -34,7 +60,32 @@ public class UserController {
         return ResponseEntity.status(404).body(Map.of("success", false, "message", "Usuario no encontrado"));
     }
 
-    // Actualizar usuario
+
+
+    @Operation(summary = "Actualizar usuario",
+            description = "Actualiza los datos de un usuario existente",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Campos a actualizar (username, name, role, location)",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = """
+                               {
+                                   "username": "nuevo_username",
+                                   "name": "Nuevo Nombre",
+                                   "role": "USER",
+                                   "location": "POINT(-70.700 -33.500)"
+                               }"""
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Usuario actualizado",
+                            content = @Content(schema = @Schema(example = "{\"success\": true}"))),
+                    @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+                    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+            })
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable int id,

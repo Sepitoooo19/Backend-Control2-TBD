@@ -2,11 +2,18 @@ package bdavanzadas.lab1.Controllers;
 
 
 import bdavanzadas.lab1.services.UserService;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import bdavanzadas.lab1.entities.UserEntity;
 import bdavanzadas.lab1.Security.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 
 import org.springframework.http.HttpStatus;
 
@@ -58,6 +65,35 @@ public class AuthController {
      * @param body El objeto JSON con los datos del nuevo usuario (username, password, role, name y location)
      * @return Una respuesta HTTP con el resultado del registro.
      */
+
+
+
+    @Operation(summary = "Registrar un nuevo usuario",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Datos del usuario a registrar",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "Ejemplo básico",
+                                    summary = "Registro con ubicación WKT",
+                                    value = """
+                    {
+                        "username": "usuario_ejemplo",
+                        "password": "claveSegura123",
+                        "role": "USER",
+                        "name": "Juan Pérez",
+                        "location": "POINT(-70.651 -33.456)"
+                    }""",
+                                    description = "El campo 'location' debe ser un WKT válido (POINT)"
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Usuario registrado"),
+                    @ApiResponse(responseCode = "400", description = "Error de validación")
+            }
+    )
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, Object> body) {
         try {
@@ -121,7 +157,33 @@ public class AuthController {
      *
      *
      * */
-    // Endpoint para el inicio de sesión
+
+
+    @Operation(summary = "Iniciar sesión",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Credenciales del usuario",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "Ejemplo básico",
+                                    summary = "Inicio de sesión con credenciales válidas",
+                                    value = """
+                    {
+                        "username": "usuario_ejemplo",
+                        "password": "claveSegura123"
+                    }""",
+                                    description = "El campo 'username' y 'password' son requeridos"
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Inicio de sesión exitoso"),
+                    @ApiResponse(responseCode = "401", description = "Credenciales inválidas")
+            }
+
+            )
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
         String username = body.get("username");
@@ -147,7 +209,41 @@ public class AuthController {
         }
     }
 
-    // Actualizar contraseña
+
+
+    /**
+     * Endpoint para actualizar la contraseña de un usuario.
+     * Este endpoint recibe un objeto JSON con la nueva contraseña del usuario.
+     * @param "id" El ID del usuario cuya contraseña se va a actualizar.
+     * @param "request" El objeto JSON con la nueva contraseña del usuario.
+     * @return Una respuesta HTTP con el resultado de la actualización.
+     *
+     *
+     * */
+
+    @Operation(summary = "Actualizar contraseña de usuario",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Nueva contraseña del usuario",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "Ejemplo básico",
+                                    summary = "Actualización de contraseña",
+                                    value = """
+                    {
+                        "newPassword": "nuevaContraseña123"
+                    }""",
+                                    description = "El campo 'newPassword' es requerido"
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Contraseña actualizada"),
+                    @ApiResponse(responseCode = "400", description = "Error de validación")
+            }
+
+            )
     @PatchMapping("/user/{id}/password")
     public ResponseEntity<?> updatePassword(
             @PathVariable int id,
