@@ -55,7 +55,7 @@ public class AuthController {
      * Endpoint para registrar un nuevo usuario.
      * Este endpoint recibe un objeto JSON con los datos del nuevo usuario y lo registra en la base de datos.
      *
-     * @param body El objeto JSON con los datos del nuevo usuario (username, password, role y name)
+     * @param body El objeto JSON con los datos del nuevo usuario (username, password, role, name y location)
      * @return Una respuesta HTTP con el resultado del registro.
      */
     @PostMapping("/register")
@@ -65,6 +65,7 @@ public class AuthController {
             String password = (String) body.get("password");
             String role = (String) body.get("role");
             String name = (String) body.get("name");
+            String locationWKT = (String) body.get("location");
 
             // Validaciones básicas
             if (username == null || username.isEmpty()) {
@@ -87,23 +88,30 @@ public class AuthController {
                         .body(Map.of("success", false, "message", "El nombre completo es requerido"));
             }
 
-            // Lógica de registro
+            if (locationWKT == null || !locationWKT.startsWith("POINT(")) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Ubicación inválida. Formato: 'POINT(longitud latitud)'"));
+            }
+
+            // Lógica de registro (actualizada para coincidir con los services)
             if ("ADMIN".equalsIgnoreCase(role)) {
-                userService.registerAdmin(username, password, name);
+                userService.registerAdmin(username, password, name, role, locationWKT);
             } else if ("USER".equalsIgnoreCase(role)) {
-                userService.registerUser(username, password, name);
+                userService.registerUser(username, password, name, role, locationWKT);
             } else {
                 return ResponseEntity.badRequest()
                         .body(Map.of("success", false, "message", "Rol no válido. Los roles permitidos son ADMIN o USER"));
             }
 
             return ResponseEntity.ok(Map.of("success", true, "message", "Usuario registrado exitosamente"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("success", false, "message", "Error al registrar usuario: " + e.getMessage()));
         }
     }
-
     /**
      * Endpoint para loggearse en la aplicación.
      * Este endpoint recibe un objeto JSON con el nombre de usuario y la contraseña del usuario.
@@ -137,5 +145,19 @@ public class AuthController {
                     "message", "Credenciales inválidas"
             ));
         }
+    }
+
+    // Actualizar contraseña
+    @PatchMapping("/user/{id}/password")
+    public ResponseEntity<?> updatePassword(
+            @PathVariable int id,
+            @RequestBody Map<String, String> request
+    ) {
+        String newPassword = request.get("newPassword");
+        if (newPassword == null || newPassword.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "La contraseña es requerida"));
+        }
+        boolean updated = userService.updatePassword(id, newPassword);
+        return ResponseEntity.ok(Map.of("success", updated));
     }
 }

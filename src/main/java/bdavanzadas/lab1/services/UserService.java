@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.List;
+
 
 /**
  *
@@ -35,40 +37,50 @@ public class UserService {
     private PasswordEncoder encoder;
 
     /**
-     * Método para registrar un nuevo usuario administrador.
-     * @param username El nombre de usuario del nuevo administrador.
-     * @param password La contraseña del nuevo administrador.
-     * @param name El nombre completo del administrador.
-     *
-     * Este método codifica la contraseña del nuevo administrador y la guarda en la base de datos.
-     * Si el nombre de usuario ya está en uso, se lanza una excepción.
+     * Registra un nuevo usuario administrador con ubicación geográfica.
+     * @param username Nombre de usuario (único)
+     * @param password Contraseña (se hashea automáticamente)
+     * @param name Nombre completo
+     * @param role Rol del usuario (debe ser "ADMIN")
+     * @param wktPoint Ubicación en formato WKT ("POINT(longitud latitud)")
+     * @throws IllegalArgumentException Si el WKT es inválido
      */
-    public void registerAdmin(String username, String password, String name) {
+    public void registerAdmin(String username, String password, String name, String role, String wktPoint) {
+        if (wktPoint == null || !wktPoint.startsWith("POINT(")) {
+            throw new IllegalArgumentException("Formato WKT inválido. Ejemplo: 'POINT(-70.651 -33.456)'");
+        }
+
         String encodedPassword = encoder.encode(password);
         UserEntity user = new UserEntity();
         user.setUsername(username);
         user.setPassword(encodedPassword);
-        user.setRole("ADMIN");
+        user.setRole("ADMIN"); // Fuerza el rol ADMIN
         user.setName(name);
+        user.setLocation(wktPoint);
         userRepository.save(user);
     }
 
     /**
-     * Método para registrar un nuevo usuario.
-     * @param username El nombre de usuario del usuario.
-     * @param password La contraseña del nuevo usuario.
-     * @param name El nombre completo del usuario.
-     *
-     * Este método codifica la contraseña del nuevo usuario y la guarda en la base de datos.
-     * Si el nombre de usuario ya está en uso, se lanza una excepción.
+     * Registra un nuevo usuario estándar con ubicación geográfica.
+     * @param username Nombre de usuario (único)
+     * @param password Contraseña (se hashea automáticamente)
+     * @param name Nombre completo
+     * @param role Rol del usuario (debe ser "USER")
+     * @param wktPoint Ubicación en formato WKT ("POINT(longitud latitud)")
+     * @throws IllegalArgumentException Si el WKT es inválido
      */
-    public void registerUser(String username, String password, String name) {
+    public void registerUser(String username, String password, String name, String role, String wktPoint) {
+        if (wktPoint == null || !wktPoint.startsWith("POINT(")) {
+            throw new IllegalArgumentException("Formato WKT inválido. Ejemplo: 'POINT(-70.651 -33.456)'");
+        }
+
         String encodedPassword = encoder.encode(password);
         UserEntity user = new UserEntity();
         user.setUsername(username);
         user.setPassword(encodedPassword);
-        user.setRole("USER");
+        user.setRole("USER"); // Fuerza el rol USER
         user.setName(name);
+        user.setLocation(wktPoint);
         userRepository.save(user);
     }
     /**
@@ -102,5 +114,29 @@ public class UserService {
             return (Long) authentication.getPrincipal(); // Retorna el ID del usuario autenticado
         }
         throw new RuntimeException("Usuario no autenticado");
+    }
+
+    // Obtener todos los usuarios
+    public List<UserEntity> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    // Eliminar usuario
+    public boolean deleteUser(int id) {
+        return userRepository.deleteById(id);
+    }
+
+    // Actualizar datos de usuario
+    public boolean updateUser(int id, String username, String name, String role, String wktPoint) {
+        if (wktPoint != null && !wktPoint.startsWith("POINT(")) {
+            throw new IllegalArgumentException("Formato WKT inválido");
+        }
+        return userRepository.updateUser(id, username, name, role, wktPoint);
+    }
+
+    // Actualizar contraseña
+    public boolean updatePassword(int id, String newPassword) {
+        String encodedPassword = encoder.encode(newPassword);
+        return userRepository.updatePassword(id, encodedPassword);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Map;
 
 
@@ -32,64 +33,107 @@ public class UserRepository implements UserRepositoryInt {
     private JdbcTemplate jdbcTemplate;
 
     /**
+        * Método para guardar un nuevo usuario en la base de datos.
+     * @param "user" El objeto UserEntity que representa al usuario a guardar.
+     * Este método utiliza una consulta SQL para insertar un nuevo usuario en la tabla de usuarios.
+     * La contraseña se codifica antes de guardarla en la base de datos.
+     * Si el nombre de usuario ya está en uso, se lanza una excepción.
+
+     * */
+    // Guardar usuario con WKT
+    public void save(UserEntity user) {
+        String sql = "INSERT INTO users (username, password, role, name, location) " +
+                "VALUES (?, ?, ?, ?, ST_GeomFromText(?, 4326))";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getPassword());
+            ps.setString(3, user.getRole());
+            ps.setString(4, user.getName());
+            ps.setString(5, user.getLocation());
+            return ps;
+        }, keyHolder);
+
+        // Solución: Obtener el ID específicamente del Map
+        Map<String, Object> keys = keyHolder.getKeys();
+        if (keys != null && keys.containsKey("id")) {
+            user.setId(((Number) keys.get("id")).intValue());
+        }
+    }
+
+
+    /**
      * Metodo para encontrar un usuario por su username
      * @param "username" El username del usuario a buscar.
      * @return El usuario encontrado.
      *
      *
      * */
+    // Buscar usuario por username (devuelve WKT)
     public UserEntity findByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
-        try {
-            return jdbcTemplate.queryForObject(sql, new Object[]{username}, (rs, rowNum) ->
-                    new UserEntity(
-                            rs.getInt("id"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            rs.getString("role"),
-                            rs.getString("name")
+        String sql = "SELECT id, username, password, role, name, ST_AsText(location) AS location " +
+                "FROM users WHERE username = ?";
 
-                    ));
-        } catch (EmptyResultDataAccessException e) {
-            return null; // Retorna null si no encuentra el usuario
-        }
+        return jdbcTemplate.queryForObject(sql, new Object[]{username}, (rs, rowNum) -> {
+            UserEntity user = new UserEntity();
+            user.setId(rs.getInt("id"));
+            user.setUsername(rs.getString("username"));
+            user.setPassword(rs.getString("password"));
+            user.setRole(rs.getString("role"));
+            user.setName(rs.getString("name"));
+            user.setLocation(rs.getString("location")); // WKT: "POINT(-70.651 -33.456)"
+            return user;
+        });
     }
-
 
     /**
-     * Metodo para guardar un usuario en la base de datos.
-     *
-     * Lo que realiza por dentro es lo siguiente:
-     * 1. Prepara la consulta SQL para insertar un nuevo usuario en la tabla "users".
-     * 2. Utiliza un KeyHolder para obtener la clave generada automáticamente (ID) después de la inserción.
-     * 3. Ejecuta la consulta de inserción utilizando el JdbcTemplate y el KeyHolder.
-     * 4. Si la inserción es exitosa, se obtiene el ID generado y se establece en el objeto UserEntity.
-     * @param "user" El usuario a guardar.
-     *
-     * @return void
-     *
+     * Metodo para encontrar a todos los usuarios
      *
      * */
-    public void save(UserEntity user) {
-        String sql = "INSERT INTO users (username, password, role, name) VALUES (?, ?, ?, ?)";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        jdbcTemplate.update(connection -> {
-            // La clave importante aquí es "Statement.RETURN_GENERATED_KEYS"
-            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, user.getUsername());
-            ps.setString(2, user.getPassword());
-            ps.setString(3, user.getRole());
-            ps.setString(4, user.getName());
-            return ps;
-        }, keyHolder);
-
-        // Aquí obtenemos el ID generado con mayor precisión
-        Map<String, Object> keys = keyHolder.getKeys();
-        if (keys != null && keys.containsKey("id")) {
-            user.setId(((Number) keys.get("id")).intValue());
-        } else {
-            throw new IllegalStateException("No se pudo generar el ID para el usuario");
-        }
+    // Obtener todos los usuarios
+    public List<UserEntity> findAll() {
+        String sql = "SELECT id, username, password, role, name, ST_AsText(location) AS location FROM users";
+        return jdbcTemplate.query(sql, (rs, rowNum) ->
+                new UserEntity(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("role"),
+                        rs.getString("name"),
+                        rs.getString("location") // WKT
+                )
+        );
     }
+
+    // Eliminar usuario por ID
+    public boolean deleteById(int id) {
+        String sql = "DELETE FROM users WHERE id = ?";
+        int affectedRows = jdbcTemplate.update(sql, id);
+        return affectedRows > 0;
+    }
+
+    // Actualizar usuario (excepto contraseña)
+    public boolean updateUser(int id, String username, String name, String role, String wktPoint) {
+        String sql = "UPDATE users SET username = ?, name = ?, role = ?, location = ST_GeomFromText(?, 4326) WHERE id = ?";
+        int affectedRows = jdbcTemplate.update(
+                sql,
+                username,
+                name,
+                role,
+                wktPoint,
+                id
+        );
+        return affectedRows > 0;
+    }
+
+    // Actualizar contraseña (método separado por seguridad)
+    public boolean updatePassword(int id, String newEncodedPassword) {
+        String sql = "UPDATE users SET password = ? WHERE id = ?";
+        return jdbcTemplate.update(sql, newEncodedPassword, id) > 0;
+    }
+
 }

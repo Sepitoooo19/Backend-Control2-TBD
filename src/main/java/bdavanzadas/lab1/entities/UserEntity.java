@@ -21,5 +21,5 @@ public class UserEntity {
     private String password;
     private String role; // ADMIN, USER
     private String name;
-
+    private String location; // Formato WKT: "POINT(-70.651 -33.456)"
 }
