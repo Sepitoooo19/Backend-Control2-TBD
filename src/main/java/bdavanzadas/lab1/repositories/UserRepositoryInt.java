@@ -36,4 +36,13 @@ public interface UserRepositoryInt {
      * */
     UserEntity findByUsername(String username);
 
+    /**
+     * Metodo para encontrar un usuario por su ID
+     * @param "id" El ID del usuario a buscar.
+     * @return El usuario encontrado.
+     *
+     *
+     * */
+    UserEntity findById(int id);
+
 }

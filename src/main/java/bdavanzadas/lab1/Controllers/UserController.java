@@ -2,12 +2,14 @@ package bdavanzadas.lab1.Controllers;
 
 import bdavanzadas.lab1.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -104,6 +106,72 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
+
+    @Operation(
+            summary = "Obtener perfil del usuario autenticado",
+            description = "Devuelve los datos del usuario actualmente logueado",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Perfil obtenido exitosamente",
+                            content = @Content(schema = @Schema(implementation = UserEntity.class))
+                    ),
+                    @ApiResponse(responseCode = "401", description = "No autenticado")
+            }
+    )
+    @GetMapping("/user")
+    public ResponseEntity<?> getAuthenticatedUserProfile() {
+        try {
+            UserEntity user = userService.getAuthenticatedUserProfile();
+
+            // Opcional: Filtrar datos sensibles antes de retornar
+            user.setPassword(null);
+
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            "success", false,
+                            "message", e.getMessage()
+                    ));
+        }
+    }
+
+
+    @Operation(
+            summary = "Obtener usuario por ID",
+            description = "Endpoint para administradores. Requiere autenticación y rol ADMIN.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Usuario encontrado",
+                            content = @Content(schema = @Schema(implementation = UserEntity.class))
+                    ),
+                    @ApiResponse(responseCode = "401", description = "No autorizado"),
+                    @ApiResponse(responseCode = "403", description = "Prohibido (requiere rol ADMIN)"),
+                    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+            }
+    )
+    // Endpoint SOLO para ADMINs
+    @PreAuthorize("hasRole('ADMIN')") // <<-- Ahora funciona correctamente
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(
+            @Parameter(description = "ID del usuario a buscar", example = "1")
+            @PathVariable int id
+    ) {
+        try {
+            UserEntity user = userService.getUserById(id);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "success", false,
+                            "message", e.getMessage()
+                    ));
+        }
+    }
+
+
 
 
 }

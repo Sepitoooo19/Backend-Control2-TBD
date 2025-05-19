@@ -102,24 +102,42 @@ public class UserService {
 
 
     /**
-     * Metodo para obtener el ID del usuario autenticado.
-     * @return El ID del usuario autenticado.
-     *
-     * Este metodo obtiene el ID del usuario autenticado a partir del contexto de seguridad.
-     * Si no hay un usuario autenticado, lanza una excepción.
+     * Método para obtener el ID del usuario autenticado como int.
+     * @return El ID del usuario autenticado (int).
+     * @throws RuntimeException Si no hay usuario autenticado o el tipo no es compatible.
      */
-    public Long getAuthenticatedUserId() {
+    public int getAuthenticatedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Long) {
-            return (Long) authentication.getPrincipal(); // Retorna el ID del usuario autenticado
+        if (authentication != null && authentication.getPrincipal() instanceof Integer) {
+            return (int) authentication.getPrincipal();
+        } else if (authentication != null && authentication.getPrincipal() instanceof Long) {
+            // Conversión segura de Long a int (si el ID cabe en un int)
+            long userId = (Long) authentication.getPrincipal();
+            if (userId > Integer.MAX_VALUE || userId < Integer.MIN_VALUE) {
+                throw new RuntimeException("El ID de usuario excede el límite de int");
+            }
+            return (int) userId;
         }
-        throw new RuntimeException("Usuario no autenticado");
+        throw new RuntimeException("Usuario no autenticado o tipo de ID no soportado");
     }
 
     // Obtener todos los usuarios
     public List<UserEntity> getAllUsers() {
         return userRepository.findAll();
     }
+
+    // Obtener usuario por ID
+    public UserEntity getUserById(int id) {
+        return userRepository.findById(id);
+    }
+
+
+    public UserEntity getAuthenticatedUserProfile() {
+        int userId = getAuthenticatedUserId(); // Usa tu método existente
+
+        return userRepository.findById(userId);
+    }
+
 
     // Eliminar usuario
     public boolean deleteUser(int id) {
@@ -139,4 +157,6 @@ public class UserService {
         String encodedPassword = encoder.encode(newPassword);
         return userRepository.updatePassword(id, encodedPassword);
     }
+
+
 }

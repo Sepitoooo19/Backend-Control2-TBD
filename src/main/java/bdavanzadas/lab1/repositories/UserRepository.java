@@ -64,6 +64,27 @@ public class UserRepository implements UserRepositoryInt {
         }
     }
 
+    // En UserRepository
+    public UserEntity findById(int id) {
+        String sql = """
+        SELECT id, username, password, role, name, ST_AsText(location) AS location 
+        FROM users 
+        WHERE id = ?
+        """;
+
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+                        new UserEntity(
+                                rs.getInt("id"),
+                                rs.getString("username"),
+                                rs.getString("password"),
+                                rs.getString("role"),
+                                rs.getString("name"),
+                                rs.getString("location")
+                        ),
+                id
+        );
+    }
+
 
     /**
      * Metodo para encontrar un usuario por su username
