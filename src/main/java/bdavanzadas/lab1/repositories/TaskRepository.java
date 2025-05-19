@@ -21,33 +21,25 @@ public class TaskRepository implements TaskRepositoryInt{
     // Create
     public TaskEntity save(TaskEntity task) {
         String sql = """
-            INSERT INTO tasks 
-                (title, description, due_date, status, user_id, sector_id, location) 
-            VALUES 
-                (?, ?, ?, ?, ?, ?, ST_GeomFromText(?, 4326))
-            """;
+        INSERT INTO tasks 
+            (title, description, due_date, status, user_id, sector_id, location) 
+        VALUES 
+            (?, ?, ?, ?, ?, ?, ST_GeomFromText(?, 4326))
+        RETURNING id, created_at
+        """;
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, task.getTitle());
-            ps.setString(2, task.getDescription());
-            ps.setObject(3, task.getDueDate());
-            ps.setString(4, task.getStatus());
-            ps.setInt(5, task.getUserId());
-            ps.setInt(6, task.getSectorId());
-            ps.setString(7, task.getLocation()); // WKT
-            return ps;
-        }, keyHolder);
-
-        // Obtener ID generado
-        Map<String, Object> keys = keyHolder.getKeys();
-        if (keys != null && keys.containsKey("id")) {
-            task.setId(((Number) keys.get("id")).intValue());
-        }
-
-        return task;
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                    task.setId(rs.getInt("id"));
+                    task.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
+                    return task;
+                },
+                task.getTitle(),
+                task.getDescription(),
+                task.getDueDate(),
+                task.getStatus(),
+                task.getUserId(),
+                task.getSectorId(),
+                task.getLocation());
     }
 
     // Read (by ID)
