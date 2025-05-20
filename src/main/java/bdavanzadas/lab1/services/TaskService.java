@@ -5,6 +5,7 @@ import bdavanzadas.lab1.repositories.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import bdavanzadas.lab1.repositories.SectorRepository;
+import java.util.stream.Collectors;
 import bdavanzadas.lab1.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -113,5 +114,47 @@ public class TaskService {
         return taskRepository.findAll().stream()
                 .filter(task -> task.getUserId() == userId)
                 .toList();
+    }
+
+    //filtro de tareas
+    public List<TaskEntity> filtrarTareasPorEstadoYPalabra(String status, String palabra) {
+        List<TaskEntity> tareasAFiltrar;
+
+        // 1. Determinar la lista inicial de tareas según el estado
+        if (status == null || status.trim().isEmpty()) {
+            // Si no se proporciona un estado, obtenemos todas las tareas
+            tareasAFiltrar = getAllTasks();
+        } else {
+            // Si se proporciona un estado, filtramos por ese estado
+            tareasAFiltrar = getTasksByStatus(status);
+        }
+
+        if (tareasAFiltrar == null) {
+            return List.of();
+        }
+
+        // 2. Filtrar por palabra clave (si se proporciona)
+        if (palabra == null || palabra.trim().isEmpty()) {
+            return tareasAFiltrar;
+        }
+
+        String palabraEnMinusculas = palabra.toLowerCase().trim();
+
+        return tareasAFiltrar.stream()
+                .filter(tarea -> {
+                    boolean coincideTitulo = false;
+                    if (tarea.getTitle() != null) {
+                        coincideTitulo = tarea.getTitle().toLowerCase().contains(palabraEnMinusculas);
+                    }
+
+                    boolean coincideDescripcion = false;
+                    if (tarea.getDescription() != null) {
+                        coincideDescripcion = tarea.getDescription().toLowerCase().contains(palabraEnMinusculas);
+                    }
+
+                    // La tarea se incluye si la palabra clave coincide con el título O la descripción
+                    return coincideTitulo || coincideDescripcion;
+                })
+                .collect(Collectors.toList()); // Recolectamos los resultados en una nueva lista
     }
 }

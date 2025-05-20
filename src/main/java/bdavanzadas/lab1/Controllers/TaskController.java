@@ -1,5 +1,6 @@
 package bdavanzadas.lab1.Controllers;
 
+import bdavanzadas.lab1.DTO.FilterDTO;
 import bdavanzadas.lab1.entities.TaskEntity;
 import bdavanzadas.lab1.services.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,5 +126,12 @@ public class TaskController {
                     "message", e.getMessage()
             ));
         }
+    }
+
+    @GetMapping("/filtro")
+    public List<TaskEntity> filtrarTareasPorEstadoYPalabra(@RequestBody FilterDTO filterDTO) {
+        String status = filterDTO.getStatus();
+        String word = filterDTO.getWord();
+        return taskService.filtrarTareasPorEstadoYPalabra(status,word);
     }
 }
