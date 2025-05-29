@@ -1,35 +1,62 @@
--- Sectores
--- Insertar comunas de Santiago como sectores
-INSERT INTO sectors (name, location) VALUES
-                                         ('Santiago', ST_GeomFromText('POINT(-70.6505 -33.4379)', 4326)),       -- Santiago Centro (ej. Plaza de Armas)
-                                         ('Providencia', ST_GeomFromText('POINT(-70.6095 -33.4317)', 4326)),   -- Providencia
-                                         ('Las Condes', ST_GeomFromText('POINT(-70.5670 -33.4000)', 4326)),    -- Las Condes
-                                         ('Vitacura', ST_GeomFromText('POINT(-70.5800 -33.3833)', 4326)),      -- Vitacura
-                                         ('Lo Barnechea', ST_GeomFromText('POINT(-70.5000 -33.3500)', 4326)),  -- Lo Barnechea
-                                         ('Ñuñoa', ST_GeomFromText('POINT(-70.6120 -33.4580)', 4326)),         -- Ñuñoa
-                                         ('La Reina', ST_GeomFromText('POINT(-70.5400 -33.4500)', 4326)),      -- La Reina
-                                         ('Macul', ST_GeomFromText('POINT(-70.6000 -33.4833)', 4326)),         -- Macul
-                                         ('Peñalolén', ST_GeomFromText('POINT(-70.5333 -33.4833)', 4326)),    -- Peñalolén
-                                         ('La Florida', ST_GeomFromText('POINT(-70.5833 -33.5333)', 4326)),   -- La Florida
-                                         ('Maipú', ST_GeomFromText('POINT(-70.7619 -33.5111)', 4326)),         -- Maipú
-                                         ('Estación Central', ST_GeomFromText('POINT(-70.6833 -33.4500)', 4326)), -- Estación Central
-                                         ('Quinta Normal', ST_GeomFromText('POINT(-70.6986 -33.4356)', 4326)),  -- Quinta Normal
-                                         ('Lo Prado', ST_GeomFromText('POINT(-70.7200 -33.4417)', 4326)),      -- Lo Prado
-                                         ('Pudahuel', ST_GeomFromText('POINT(-70.7700 -33.4300)', 4326)),      -- Pudahuel (centro urbano aprox.)
-                                         ('Cerro Navia', ST_GeomFromText('POINT(-70.7333 -33.4167)', 4326)),   -- Cerro Navia
-                                         ('Renca', ST_GeomFromText('POINT(-70.7100 -33.4000)', 4326)),         -- Renca
-                                         ('Quilicura', ST_GeomFromText('POINT(-70.7333 -33.3667)', 4326)),    -- Quilicura
-                                         ('Huechuraba', ST_GeomFromText('POINT(-70.6500 -33.3667)', 4326)),   -- Huechuraba
-                                         ('Conchalí', ST_GeomFromText('POINT(-70.6667 -33.3833)', 4326)),     -- Conchalí
-                                         ('Independencia', ST_GeomFromText('POINT(-70.6600 -33.4167)', 4326)), -- Independencia
-                                         ('Recoleta', ST_GeomFromText('POINT(-70.6333 -33.4167)', 4326)),     -- Recoleta
-                                         ('San Miguel', ST_GeomFromText('POINT(-70.6500 -33.4833)', 4326)),   -- San Miguel
-                                         ('San Joaquín', ST_GeomFromText('POINT(-70.6250 -33.4833)', 4326)),  -- San Joaquín
-                                         ('Pedro Aguirre Cerda', ST_GeomFromText('POINT(-70.6750 -33.4833)', 4326)), -- Pedro Aguirre Cerda
-                                         ('Cerrillos', ST_GeomFromText('POINT(-70.7250 -33.4900)', 4326)),    -- Cerrillos
-                                         ('La Cisterna', ST_GeomFromText('POINT(-70.6583 -33.5167)', 4326)),  -- La Cisterna
-                                         ('La Granja', ST_GeomFromText('POINT(-70.6250 -33.5333)', 4326)),    -- La Granja
-                                         ('San Ramón', ST_GeomFromText('POINT(-70.6417 -33.5333)', 4326)),    -- San Ramón
-                                         ('El Bosque', ST_GeomFromText('POINT(-70.6667 -33.5583)', 4326)),    -- El Bosque
-                                         ('Lo Espejo', ST_GeomFromText('POINT(-70.6917 -33.5333)', 4326)),    -- Lo Espejo
-                                         ('La Pintana', ST_GeomFromText('POINT(-70.6250 -33.5833)', 4326));   -- La Pintana                                   ('Maipú', ST_GeomFromText('POINT(-70.7619 -33.5111)', 4326));
+
+
+-- Tareas en Roma Centro (Sector 1)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Reparación farola', 'Farola rota cerca del Coliseo', '2025-06-15 09:00:00', 'PENDING', 2, 1, ST_GeomFromText('POINT(12.48000 41.89600)', 4326)),
+                                                                                           ('Limpieza plaza', 'Recoger basura en plaza central', '2025-06-10 08:00:00', 'PENDING', 2, 1, ST_GeomFromText('POINT(12.48150 41.89520)', 4326)),
+                                                                                           ('Poda de árboles', 'Podar árboles en via dei Fori Imperiali', '2025-06-20 10:00:00', 'COMPLETED', 2, 1, ST_GeomFromText('POINT(12.47980 41.89580)', 4326));
+
+-- Tareas en Trastevere (Sector 2)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Reparación adoquines', 'Adoquines sueltos en via della Lungaretta', '2025-06-12 14:00:00', 'PENDING', 2, 2, ST_GeomFromText('POINT(12.47000 41.88900)', 4326)),
+                                                                                           ('Pintura mural', 'Renovar pintura mural en plaza Santa Maria', '2025-07-01 09:00:00', 'PENDING', 2, 2, ST_GeomFromText('POINT(12.46950 41.88950)', 4326)),
+                                                                                           ('Instalación bancos', 'Colocar nuevos bancos en plaza Trilussa', '2025-06-25 11:00:00', 'PENDING', 2, 2, ST_GeomFromText('POINT(12.46700 41.89000)', 4326));
+
+-- Tareas en Milán Norte (Sector 3)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Mantenimiento semáforos', 'Revisión semáforos en via Padova', '2025-06-18 08:30:00', 'PENDING', 2, 3, ST_GeomFromText('POINT(9.16000 45.49000)', 4326)),
+                                                                                           ('Limpieza parque', 'Limpieza profunda del parque Sempione norte', '2025-06-22 07:00:00', 'COMPLETED', 2, 3, ST_GeomFromText('POINT(9.17000 45.49500)', 4326)),
+                                                                                           ('Reparación bicicletero', 'Arreglar estación de bicicletas en via MacMahon', '2025-07-05 10:00:00', 'PENDING', 2, 3, ST_GeomFromText('POINT(9.17500 45.48500)', 4326));
+
+-- Tareas en Montmartre (Sector 4)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Limpieza escaleras', 'Limpiar escaleras de Sacré-Coeur', '2025-06-14 06:00:00', 'PENDING', 2, 4, ST_GeomFromText('POINT(2.33500 48.88600)', 4326)),
+                                                                                           ('Reparación iluminación', 'Cambiar lámparas en Place du Tertre', '2025-06-30 16:00:00', 'PENDING', 2, 4, ST_GeomFromText('POINT(2.33800 48.88400)', 4326)),
+                                                                                           ('Poda de arbustos', 'Podar arbustos en jardines de Montmartre', '2025-06-28 09:30:00', 'PENDING', 2, 4, ST_GeomFromText('POINT(2.33200 48.88200)', 4326));
+
+-- Tareas en La Boca (Sector 5)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Reparación puente', 'Refuerzo estructural puente Av. Pedro de Mendoza', '2025-07-10 08:00:00', 'PENDING', 2, 5, ST_GeomFromText('POINT(-58.36000 -34.63500)', 4326)),
+                                                                                           ('Pintura fachadas', 'Renovar colores en Caminito', '2025-06-17 10:00:00', 'COMPLETED', 2, 5, ST_GeomFromText('POINT(-58.36300 -34.63600)', 4326)),
+                                                                                           ('Limpieza ribera', 'Recoger residuos en la ribera', '2025-06-24 07:30:00', 'PENDING', 2, 5, ST_GeomFromText('POINT(-58.35800 -34.63800)', 4326));
+
+
+-- Tareas en Roma Centro (Sector 1)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Reparación farola', 'Farola rota cerca del Coliseo', '2025-06-15 09:00:00', 'PENDING', 2, 1, ST_GeomFromText('POINT(12.48000 41.89600)', 4326)),
+                                                                                           ('Limpieza plaza', 'Recoger basura en plaza central', '2025-06-10 08:00:00', 'PENDING', 2, 1, ST_GeomFromText('POINT(12.48150 41.89520)', 4326)),
+                                                                                           ('Poda de árboles', 'Podar árboles en via dei Fori Imperiali', '2025-06-20 10:00:00', 'COMPLETED', 2, 1, ST_GeomFromText('POINT(12.47980 41.89580)', 4326));
+
+-- Tareas en Trastevere (Sector 2)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Reparación adoquines', 'Adoquines sueltos en via della Lungaretta', '2025-06-12 14:00:00', 'PENDING', 2, 2, ST_GeomFromText('POINT(12.47000 41.88900)', 4326)),
+                                                                                           ('Pintura mural', 'Renovar pintura mural en plaza Santa Maria', '2025-07-01 09:00:00', 'PENDING', 2, 2, ST_GeomFromText('POINT(12.46950 41.88950)', 4326)),
+                                                                                           ('Instalación bancos', 'Colocar nuevos bancos en plaza Trilussa', '2025-06-25 11:00:00', 'PENDING', 2, 2, ST_GeomFromText('POINT(12.46700 41.89000)', 4326));
+
+-- Tareas en Milán Norte (Sector 3)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Mantenimiento semáforos', 'Revisión semáforos en via Padova', '2025-06-18 08:30:00', 'PENDING', 2, 3, ST_GeomFromText('POINT(9.16000 45.49000)', 4326)),
+                                                                                           ('Limpieza parque', 'Limpieza profunda del parque Sempione norte', '2025-06-22 07:00:00', 'COMPLETED', 2, 3, ST_GeomFromText('POINT(9.17000 45.49500)', 4326)),
+                                                                                           ('Reparación bicicletero', 'Arreglar estación de bicicletas en via MacMahon', '2025-07-05 10:00:00', 'PENDING', 2, 3, ST_GeomFromText('POINT(9.17500 45.48500)', 4326));
+
+-- Tareas en Montmartre (Sector 4)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Limpieza escaleras', 'Limpiar escaleras de Sacré-Coeur', '2025-06-14 06:00:00', 'PENDING', 2, 4, ST_GeomFromText('POINT(2.33500 48.88600)', 4326)),
+                                                                                           ('Reparación iluminación', 'Cambiar lámparas en Place du Tertre', '2025-06-30 16:00:00', 'PENDING', 2, 4, ST_GeomFromText('POINT(2.33800 48.88400)', 4326)),
+                                                                                           ('Poda de arbustos', 'Podar arbustos en jardines de Montmartre', '2025-06-28 09:30:00', 'PENDING', 2, 4, ST_GeomFromText('POINT(2.33200 48.88200)', 4326));
+
+-- Tareas en La Boca (Sector 5)
+INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES
+                                                                                           ('Reparación puente', 'Refuerzo estructural puente Av. Pedro de Mendoza', '2025-07-10 08:00:00', 'PENDING', 2, 5, ST_GeomFromText('POINT(-58.36000 -34.63500)', 4326)),
+                                                                                           ('Pintura fachadas', 'Renovar colores en Caminito', '2025-06-17 10:00:00', 'COMPLETED', 2, 5, ST_GeomFromText('POINT(-58.36300 -34.63600)', 4326)),
+                                                                                           ('Limpieza ribera', 'Recoger residuos en la ribera', '2025-06-24 07:30:00', 'PENDING', 2, 5, ST_GeomFromText('POINT(-58.35800 -34.63800)', 4326));
