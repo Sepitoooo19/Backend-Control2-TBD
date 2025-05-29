@@ -13,7 +13,7 @@ CREATE TABLE users (
 CREATE TABLE sectors (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,  -- Ej: "Construcción", "Reparación de semáforos"
-    location GEOGRAPHY(POINT, 4326)  -- Punto central del sector
+    location GEOGRAPHY(POLYGON, 4326) -- Cambio de punto a poligono
 );
 
 -- Creación de la tabla de tareas

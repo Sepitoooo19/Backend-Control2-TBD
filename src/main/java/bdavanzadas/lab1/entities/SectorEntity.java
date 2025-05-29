@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class SectorEntity {
     private Integer id;
     private String name;
-    private String location; // Formato WKT (POINT(long lat))
+    private String location; //Polígono
 }

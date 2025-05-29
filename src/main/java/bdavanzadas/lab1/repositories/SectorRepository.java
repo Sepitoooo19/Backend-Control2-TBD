@@ -17,6 +17,7 @@ public class SectorRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    // Metodo save (insert)
     public SectorEntity save(SectorEntity sector) {
         String sql = """
             INSERT INTO sectors (name, location) 
@@ -40,6 +41,7 @@ public class SectorRepository {
         return sector;
     }
 
+    // Metodo findById
     public Optional<SectorEntity> findById(int id) {
         String sql = """
             SELECT id, name, ST_AsText(location) as location 

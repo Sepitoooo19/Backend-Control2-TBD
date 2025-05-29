@@ -17,8 +17,8 @@ public class SectorService {
         if (sector.getName() == null || sector.getName().isEmpty()) {
             throw new IllegalArgumentException("El nombre del sector no puede estar vacío");
         }
-        if (sector.getLocation() == null || !sector.getLocation().startsWith("POINT(")) {
-            throw new IllegalArgumentException("Formato de ubicación inválido. Use: POINT(longitud latitud)");
+        if (sector.getLocation() == null || !sector.getLocation().startsWith("POLYGON((")) {
+            throw new IllegalArgumentException("Formato de ubicación inválido. Use: POLYGON((long1 lat1, long2 lat2, ...))");
         }
 
         return sectorRepository.save(sector);
