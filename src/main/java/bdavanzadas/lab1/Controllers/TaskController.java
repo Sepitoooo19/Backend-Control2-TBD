@@ -190,4 +190,17 @@ public class TaskController {
             return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
         }
     }
+
+    @GetMapping("/tarea-pendiente-cerca/{userLocationWKT}")
+    public ResponseEntity<?> getTareasPendienteCerca(@PathVariable String userLocationWKT) {
+        try {
+            return ResponseEntity.ok(taskService.getTareaPendienteMasCercana(userLocationWKT));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
+    }
 }

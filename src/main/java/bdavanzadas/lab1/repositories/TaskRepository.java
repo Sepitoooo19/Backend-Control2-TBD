@@ -148,6 +148,34 @@ public class TaskRepository implements TaskRepositoryInt{
     // Requerimientos funcionales adicionales
 
     //2- tarea pendiente mas cercana al usuario
+    public TaskEntity findNearestPendingTaskForUser(int userId, String userLocationWKT) {
+        // La consulta ahora incluye el filtro por user_id
+        String sql = "SELECT id, title, description, due_date, status, user_id, sector_id, " +
+                "       ST_AsText(location) as location_wkt, created_at " +
+                "FROM tasks " +
+                "WHERE status = 'PENDING' AND user_id = ? " +
+                "ORDER BY ST_Distance(ST_GeomFromText(?, 4326), location) " +
+                "LIMIT 1";
+        try {
+            return jdbcTemplate.queryForObject(sql, new Object[]{userId, userLocationWKT}, (rs, rowNum) -> {
+                TaskEntity task = new TaskEntity();
+                task.setId(rs.getInt("id"));
+                task.setTitle(rs.getString("title"));
+                task.setDescription(rs.getString("description"));
+                task.setDueDate(rs.getTimestamp("due_date") != null ?
+                        rs.getTimestamp("due_date").toLocalDateTime() : null);
+                task.setStatus(rs.getString("status"));
+                task.setUserId(rs.getInt("user_id"));
+                task.setSectorId(rs.getInt("sector_id"));
+                task.setLocation(rs.getString("location_wkt")); // Usar el alias location_wkt
+                task.setCreatedAt(rs.getTimestamp("created_at") != null ?
+                        rs.getTimestamp("created_at").toLocalDateTime() : null);
+                return task;
+            });
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
 
     //3- sector con mas tareas completadas en un radio de 2km
 

@@ -210,4 +210,13 @@ public class TaskService {
         // 3. Usar el método del repositorio que ya tenemos
         return taskRepository.countTasksByUserAndSector(userId);
     }
+
+    //2- tarea pendiente mas cercana al usuario
+    public TaskEntity getTareaPendienteMasCercana(String userLocationWKT){
+        // 1. obtener el id del usuario autenticado
+        int userId = userService.getAuthenticatedUserId();
+        userLocationWKT="POINT("+userLocationWKT+")";
+        // 2. llamar al repositorio para obtener la tarea pendiente más cercana
+        return taskRepository.findNearestPendingTaskForUser(userId, userLocationWKT);
+    }
 }
