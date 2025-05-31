@@ -124,6 +124,26 @@ public class TaskRepository implements TaskRepositoryInt{
         return deleted > 0;
     }
 
+    public List<Map<String, Object>> countTasksByUserAndSector(int userId) {
+        String sql = """
+        SELECT 
+            s.name AS sector_name, 
+            COUNT(t.id) AS task_count
+        FROM 
+            tasks t
+        JOIN 
+            sectors s ON t.sector_id = s.id
+        WHERE 
+            t.user_id = ?
+        GROUP BY 
+            s.name
+        ORDER BY 
+            task_count DESC
+        """;
+
+        return jdbcTemplate.queryForList(sql, userId);
+    }
+
 
     // Requerimientos funcionales adicionales
 

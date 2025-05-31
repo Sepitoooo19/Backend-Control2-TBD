@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -167,7 +168,26 @@ public class TaskController {
     }
 
     @GetMapping("/tareasbysectors/{idusuario}")
-    public List<List<Object>> getTareasBySectors(@PathVariable int idusuario) {
-        return taskService.getTaskbyuserBySector(idusuario);
+    public ResponseEntity<?> getTareasBySectors(@PathVariable int idusuario) {
+        try {
+            return ResponseEntity.ok(taskService.getTaskbyuserBySector(idusuario));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
+    }
+
+    @GetMapping("/mis-tareas-por-sector")
+    public ResponseEntity<?> getMisTareasAgrupadasPorSector() {
+        try {
+            return ResponseEntity.ok(taskService.getTasksByAuthenticatedUserAndSector());
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
     }
 }

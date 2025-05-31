@@ -191,48 +191,23 @@ public class TaskService {
      *
      */
     public List<List<Object>> getTaskbyuserBySector(int userId) {
-        if (userId <= 0) {
-            throw new IllegalArgumentException("ID de usuario inválido");
-        }
+        List<Map<String, Object>> results = taskRepository.countTasksByUserAndSector(userId);
 
-        // 1. Obtener todas las tareas del usuario.
-        List<TaskEntity> userTasks = getTasksByUserId(userId);
+        return results.stream()
+                .map(row -> {
+                    List<Object> entry = new ArrayList<>();
+                    entry.add(row.get("sector_name"));
+                    entry.add(row.get("task_count"));
+                    return entry;
+                })
+                .collect(Collectors.toList());
+    }
 
-        if (userTasks.isEmpty()) {
-            return new ArrayList<>(); // Si el usuario no tiene tareas, devuelve una lista vacía.
-        }
+    public List<Map<String, Object>> getTasksByAuthenticatedUserAndSector() {
+        // 1. Obtener el ID del usuario autenticado
+        int userId = userService.getAuthenticatedUserId();
 
-        // 2. Agrupar tareas por sectorId y contar.
-        //    Esto crea un Map donde la clave es sectorId y el valor es el conteo de tareas.
-        Map<Integer, Long> tasksCountBySectorId = userTasks.stream()
-                .collect(Collectors.groupingBy(TaskEntity::getSectorId, Collectors.counting()));
-
-        // 3. Preparar la lista de resultados.
-        List<List<Object>> result = new ArrayList<>();
-
-        // 4. Iterar sobre el mapa de conteos, obtener el nombre del sector y construir la salida.
-        for (Map.Entry<Integer, Long> entry : tasksCountBySectorId.entrySet()) {
-            Integer sectorId = entry.getKey();
-            Long count = entry.getValue();
-            String sectorName = "Desconocido"; // Valor por defecto si el sector no se encuentra
-
-            // Buscar el nombre del sector usando el sectorId.
-            // Asumo que SectorRepository tiene un método findById que devuelve Optional<SectorEntity>
-            // y SectorEntity tiene un método getName().
-            Optional<SectorEntity> sectorOptional = sectorRepository.findById(sectorId);
-            if (sectorOptional.isPresent()) {
-                sectorName = sectorOptional.get().getName(); // Asegúrate que SectorEntity tiene getName()
-            } else {
-                // Opcional: puedes decidir si incluir sectores "Desconocido" o loggear un aviso.
-                System.err.println("Advertencia: Sector con ID " + sectorId + " no encontrado, pero hay " + count + " tareas asociadas.");
-            }
-
-            List<Object> sectorInfo = new ArrayList<>();
-            sectorInfo.add(sectorName);
-            sectorInfo.add(count);
-            result.add(sectorInfo);
-        }
-
-        return result;
+        // 3. Usar el método del repositorio que ya tenemos
+        return taskRepository.countTasksByUserAndSector(userId);
     }
 }
