@@ -1,10 +1,15 @@
 package bdavanzadas.lab1.services;
 
+import bdavanzadas.lab1.entities.SectorEntity;
 import bdavanzadas.lab1.entities.TaskEntity;
 import bdavanzadas.lab1.repositories.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import bdavanzadas.lab1.repositories.SectorRepository;
+
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import bdavanzadas.lab1.repositories.UserRepository;
 import org.springframework.stereotype.Service;
@@ -169,5 +174,65 @@ public class TaskService {
                     return coincideTitulo || coincideDescripcion;
                 })
                 .collect(Collectors.toList()); // Recolectamos los resultados en una nueva lista
+    }
+
+    // REQUERIMIENTOS FUNCIONALES
+
+    // 1- TAREAS DEL USUARIO POR SECTOR
+    /**
+     * Obtiene las tareas de un usuario específico y las agrupa por sector,
+     * contando cuántas tareas pertenecen a cada sector para ese usuario.
+     *
+     * @param userId ID del usuario.
+     * @return Una lista de listas de objetos. Cada lista interna contiene dos elementos:
+     * el nombre del sector (String) y la cantidad de tareas (Long) en ese sector
+     * para el usuario especificado.
+     * Ejemplo: [ ["NombreSector1", 5], ["NombreSector2", 3] ]
+     *
+     */
+    public List<List<Object>> getTaskbyuserBySector(int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("ID de usuario inválido");
+        }
+
+        // 1. Obtener todas las tareas del usuario.
+        List<TaskEntity> userTasks = getTasksByUserId(userId);
+
+        if (userTasks.isEmpty()) {
+            return new ArrayList<>(); // Si el usuario no tiene tareas, devuelve una lista vacía.
+        }
+
+        // 2. Agrupar tareas por sectorId y contar.
+        //    Esto crea un Map donde la clave es sectorId y el valor es el conteo de tareas.
+        Map<Integer, Long> tasksCountBySectorId = userTasks.stream()
+                .collect(Collectors.groupingBy(TaskEntity::getSectorId, Collectors.counting()));
+
+        // 3. Preparar la lista de resultados.
+        List<List<Object>> result = new ArrayList<>();
+
+        // 4. Iterar sobre el mapa de conteos, obtener el nombre del sector y construir la salida.
+        for (Map.Entry<Integer, Long> entry : tasksCountBySectorId.entrySet()) {
+            Integer sectorId = entry.getKey();
+            Long count = entry.getValue();
+            String sectorName = "Desconocido"; // Valor por defecto si el sector no se encuentra
+
+            // Buscar el nombre del sector usando el sectorId.
+            // Asumo que SectorRepository tiene un método findById que devuelve Optional<SectorEntity>
+            // y SectorEntity tiene un método getName().
+            Optional<SectorEntity> sectorOptional = sectorRepository.findById(sectorId);
+            if (sectorOptional.isPresent()) {
+                sectorName = sectorOptional.get().getName(); // Asegúrate que SectorEntity tiene getName()
+            } else {
+                // Opcional: puedes decidir si incluir sectores "Desconocido" o loggear un aviso.
+                System.err.println("Advertencia: Sector con ID " + sectorId + " no encontrado, pero hay " + count + " tareas asociadas.");
+            }
+
+            List<Object> sectorInfo = new ArrayList<>();
+            sectorInfo.add(sectorName);
+            sectorInfo.add(count);
+            result.add(sectorInfo);
+        }
+
+        return result;
     }
 }

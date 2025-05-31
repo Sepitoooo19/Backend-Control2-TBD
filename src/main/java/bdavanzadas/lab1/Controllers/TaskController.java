@@ -165,4 +165,9 @@ public class TaskController {
         String word = filterDTO.getWord();
         return taskService.filtrarTareasPorEstadoYPalabra(status,word);
     }
+
+    @GetMapping("/tareasbysectors/{idusuario}")
+    public List<List<Object>> getTareasBySectors(@PathVariable int idusuario) {
+        return taskService.getTaskbyuserBySector(idusuario);
+    }
 }

@@ -123,4 +123,12 @@ public class TaskRepository implements TaskRepositoryInt{
         int deleted = jdbcTemplate.update(sql, id);
         return deleted > 0;
     }
+
+
+    // Requerimientos funcionales adicionales
+
+    //2- tarea pendiente mas cercana al usuario
+
+    //3- sector con mas tareas completadas en un radio de 2km
+
 }
