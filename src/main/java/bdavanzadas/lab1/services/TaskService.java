@@ -76,12 +76,25 @@ public class TaskService {
 
     // Actualizar una tarea existente
     public TaskEntity updateTask(TaskEntity task) {
+        System.out.println("Actualizando tarea con ID: " + task.getId()); // Debug
+
         if (task.getId() <= 0) {
             throw new IllegalArgumentException("ID de tarea inválido");
         }
+
+        // Verificar que la tarea existe antes de actualizar
+        TaskEntity existingTask = taskRepository.findById(task.getId());
+        if (existingTask == null) {
+            throw new RuntimeException("No se encontró la tarea con ID: " + task.getId());
+        }
+
+        System.out.println("Tarea encontrada, procediendo a actualizar..."); // Debug
+
         if (!taskRepository.update(task)) {
             throw new RuntimeException("No se pudo actualizar la tarea con ID: " + task.getId());
         }
+
+        System.out.println("Tarea actualizada exitosamente"); // Debug
         return taskRepository.findById(task.getId());
     }
 

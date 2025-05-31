@@ -1,4 +1,32 @@
+-- Sector 1: Centro de Roma (área alrededor del Coliseo)
+INSERT INTO sectors (name, location) VALUES (
+                                                'Roma Centro',
+                                                ST_GeomFromText('POLYGON((12.47831 41.89462, 12.48300 41.89462, 12.48300 41.89800, 12.47831 41.89800, 12.47831 41.89462))', 4326)
+                                            );
 
+-- Sector 2: Trastevere (Roma)
+INSERT INTO sectors (name, location) VALUES (
+                                                'Trastevere',
+                                                ST_GeomFromText('POLYGON((12.46500 41.88500, 12.47500 41.88500, 12.47500 41.89200, 12.46500 41.89200, 12.46500 41.88500))', 4326)
+                                            );
+
+-- Sector 3: Zona Norte de Milán
+INSERT INTO sectors (name, location) VALUES (
+                                                'Milán Norte',
+                                                ST_GeomFromText('POLYGON((9.15000 45.48000, 9.18000 45.48000, 9.18000 45.50000, 9.15000 45.50000, 9.15000 45.48000))', 4326)
+                                            );
+
+-- Sector 4: Barrio de Montmartre (París)
+INSERT INTO sectors (name, location) VALUES (
+                                                'Montmartre',
+                                                ST_GeomFromText('POLYGON((2.33000 48.88000, 2.34000 48.88000, 2.34000 48.89000, 2.33000 48.89000, 2.33000 48.88000))', 4326)
+                                            );
+
+-- Sector 5: La Boca (Buenos Aires)
+INSERT INTO sectors (name, location) VALUES (
+                                                'La Boca',
+                                                ST_GeomFromText('POLYGON((-58.36500 -34.64000, -58.35500 -34.64000, -58.35500 -34.63000, -58.36500 -34.63000, -58.36500 -34.64000))', 4326)
+                                            );
 
 -- Tareas en Roma Centro (Sector 1)
 INSERT INTO tasks (title, description, due_date, status, user_id, sector_id, location) VALUES

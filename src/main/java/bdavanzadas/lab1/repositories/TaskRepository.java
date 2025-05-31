@@ -2,6 +2,7 @@ package bdavanzadas.lab1.repositories;
 
 import bdavanzadas.lab1.entities.TaskEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -44,26 +45,28 @@ public class TaskRepository implements TaskRepositoryInt{
 
     // Read (by ID)
     public TaskEntity findById(int id) {
-        String sql = """
-            SELECT 
-                id, title, description, due_date, status, 
-                user_id, sector_id, ST_AsText(location) as location, created_at
-            FROM tasks 
-            WHERE id = ?
-            """;
+        String sql = "SELECT id, title, description, due_date, status, user_id, sector_id, " +
+                "ST_AsText(location) as location, created_at FROM tasks WHERE id = ?";
 
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
-                new TaskEntity(
-                        rs.getInt("id"),
-                        rs.getString("title"),
-                        rs.getString("description"),
-                        rs.getObject("due_date", LocalDateTime.class),
-                        rs.getString("status"),
-                        rs.getInt("user_id"),
-                        rs.getInt("sector_id"),
-                        rs.getString("location"), // WKT
-                        rs.getObject("created_at", LocalDateTime.class)
-                ), id);
+        try {
+            return jdbcTemplate.queryForObject(sql, new Object[]{id}, (rs, rowNum) -> {
+                TaskEntity task = new TaskEntity();
+                task.setId(rs.getInt("id"));
+                task.setTitle(rs.getString("title"));
+                task.setDescription(rs.getString("description"));
+                task.setDueDate(rs.getTimestamp("due_date") != null ?
+                        rs.getTimestamp("due_date").toLocalDateTime() : null);
+                task.setStatus(rs.getString("status"));
+                task.setUserId(rs.getInt("user_id"));
+                task.setSectorId(rs.getInt("sector_id"));
+                task.setLocation(rs.getString("location")); // Ya viene como WKT gracias a ST_AsText()
+                task.setCreatedAt(rs.getTimestamp("created_at") != null ?
+                        rs.getTimestamp("created_at").toLocalDateTime() : null);
+                return task;
+            });
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 
     // Read (All)
@@ -91,30 +94,27 @@ public class TaskRepository implements TaskRepositoryInt{
 
     // Update
     public boolean update(TaskEntity task) {
-        String sql = """
-            UPDATE tasks SET 
-                title = ?, 
-                description = ?, 
-                due_date = ?, 
-                status = ?, 
-                user_id = ?, 
-                sector_id = ?, 
-                location = ST_GeomFromText(?, 4326)
-            WHERE id = ?
-            """;
+        String sql = "UPDATE tasks SET title = ?, description = ?, due_date = ?, status = ?, " +
+                "sector_id = ?, location = ST_GeomFromText(?, 4326) WHERE id = ?";
 
-        int updated = jdbcTemplate.update(sql,
-                task.getTitle(),
-                task.getDescription(),
-                task.getDueDate(),
-                task.getStatus(),
-                task.getUserId(),
-                task.getSectorId(),
-                task.getLocation(), // WKT
-                task.getId()
-        );
+        try {
+            int rowsAffected = jdbcTemplate.update(sql,
+                    task.getTitle(),
+                    task.getDescription(),
+                    task.getDueDate(),
+                    task.getStatus(),
+                    task.getSectorId(),
+                    task.getLocation(), // Esto debe ser el string WKT: "POINT(12.48 41.896)"
+                    task.getId()
+            );
 
-        return updated > 0;
+            System.out.println("Filas afectadas: " + rowsAffected); // Debug
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            System.err.println("Error actualizando tarea: " + e.getMessage());
+            e.printStackTrace(); // Para ver el stack trace completo
+            return false;
+        }
     }
 
     // Delete

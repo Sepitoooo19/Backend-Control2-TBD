@@ -3,6 +3,7 @@ package bdavanzadas.lab1.Controllers;
 import bdavanzadas.lab1.DTO.FilterDTO;
 import bdavanzadas.lab1.entities.TaskEntity;
 import bdavanzadas.lab1.services.TaskService;
+import bdavanzadas.lab1.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,9 @@ public class TaskController {
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private UserService userService;
 
     // Crear tarea (solo usuarios autenticados)
     @PostMapping
@@ -59,20 +63,47 @@ public class TaskController {
         return taskService.getAllTasks();
     }
 
-    // Actualizar tarea (solo el dueño o admin)
-    @PutMapping("/{id}")
-    @PreAuthorize("@taskSecurity.isTaskOwnerOrAdmin(#id)")
-    public ResponseEntity<?> updateTask(@PathVariable int id, @RequestBody TaskEntity task) {
+
+    // Obtener tareas del usuario autenticado
+    @GetMapping("/my-tasks")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMyTasks() {
         try {
-            task.setId(id);
-            TaskEntity updatedTask = taskService.updateTask(task);
-            return ResponseEntity.ok(updatedTask);
+            int userId = userService.getAuthenticatedUserId();
+            List<TaskEntity> tasks = taskService.getTasksByUserId(userId);
+            return ResponseEntity.ok(tasks);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", e.getMessage()
             ));
+        }
+    }
+
+
+    // Actualizar tarea (solo el dueño o admin)
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateTask(@PathVariable int id, @RequestBody TaskEntity task) {
+        System.out.println("Recibida petición PUT para tarea ID: " + id); // Debug
+        System.out.println("Datos recibidos: " + task); // Debug
+
+        try {
+            task.setId(id);
+            TaskEntity updatedTask = taskService.updateTask(task);
+            return ResponseEntity.ok(updatedTask);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error de argumentos: " + e.getMessage()); // Debug
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
         } catch (RuntimeException e) {
+            System.err.println("Error runtime: " + e.getMessage()); // Debug
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "success", false,
                     "message", e.getMessage()
