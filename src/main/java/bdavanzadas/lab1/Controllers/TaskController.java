@@ -255,4 +255,18 @@ public class TaskController {
             return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
         }
     }
+
+    @GetMapping("/tareas-usuarios-por-sector")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getTareasUsuariosPorSector() {
+        try {
+            return ResponseEntity.ok(taskService.getTareasPorUsuarioPorSector());
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
+    }
 }

@@ -261,6 +261,14 @@ public class TaskService {
 
 
     //4 ¿Cuál es el promedio de distancia de las tareas completadas respecto a la ubicación del usuario?
+    /**
+     * Obtiene el promedio de distancia de las tareas completadas
+     * respecto a la ubicación del usuario autenticado.
+     *
+     * @param locationWKT Ubicación del usuario en formato WKT (Well-Known Text).
+     *                        Debe ser una cadena que represente un punto, por ejemplo: "longitud latitud".
+     * @return El promedio de distancia de las tareas completadas respecto a la ubicación del usuario.
+     */
     public Float getPromedioDistanciaTareasCompletadas(String locationWKT) {
         // 1. Obtener el ID del usuario autenticado
         int userId = userService.getAuthenticatedUserId();
@@ -320,6 +328,17 @@ public class TaskService {
         }
 
         return nearestPendingTask;
+    }
+
+    // 7- ¿Cuántas tareas ha realizado cada usuario por sector?
+    /**
+     * Obtiene el conteo de tareas realizadas por cada usuario, agrupadas por sector.
+     *
+     * @return Una lista de mapas, donde cada mapa contiene el ID del usuario, el nombre del sector
+     * y la cantidad de tareas realizadas por ese usuario en ese sector.
+     */
+    public List<List<Object>> getTareasPorUsuarioPorSector() {
+        return taskRepository.getTaskCountSector();
     }
 
 

@@ -329,5 +329,33 @@ public class TaskRepository implements TaskRepositoryInt{
             return null;
         }
     }
+
+    // 7- ¿Cuántas tareas ha realizado cada usuario por sector?
+    public List<List<Object>> getTaskCountSector() {
+        String sql = """
+        SELECT 
+            u.username AS user_name, 
+            s.name AS sector_name, 
+            COUNT(t.id) AS task_count
+        FROM 
+            tasks t
+        JOIN 
+            users u ON t.user_id = u.id
+        JOIN 
+            sectors s ON t.sector_id = s.id
+        GROUP BY 
+            u.username, s.name
+        ORDER BY 
+            u.username, s.name
+        """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            List<Object> row = new ArrayList<>();
+            row.add(rs.getString("user_name"));
+            row.add(rs.getString("sector_name"));
+            row.add(rs.getInt("task_count"));
+            return row;
+        });
+    }
 }
 
