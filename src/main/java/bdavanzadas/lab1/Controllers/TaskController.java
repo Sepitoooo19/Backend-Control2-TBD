@@ -203,4 +203,56 @@ public class TaskController {
             return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
         }
     }
+
+    @GetMapping("/sector-mas-tareas-2k/{locationWKT}")
+    public ResponseEntity<?> getSectorMasTareas(@PathVariable String locationWKT) {
+        try {
+            List<Object> sector = taskService.getSectorconmastareasCompletadasEn2km(locationWKT);
+            return ResponseEntity.ok(sector);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
+    }
+
+    @GetMapping("/promedio-distancia-tareas-completadas/{locationWKT}")
+    public ResponseEntity<?> getPromedioDistanciaTareasCompletadas(@PathVariable String locationWKT) {
+        try {
+            return ResponseEntity.ok(taskService.getPromedioDistanciaTareasCompletadas(locationWKT));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
+    }
+    @GetMapping("/sectores-con-mas-tareas-pendientes")
+    public ResponseEntity<?> getTareasPorSectores() {
+        try {
+            return ResponseEntity.ok(taskService.getSectorsWithMostPendingTasks());
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
+    }
+
+    @GetMapping("/tarea-pendiente-mas-cerca-allusers/{userLocationWKT}")
+    public ResponseEntity<?> getTareaPendienteMasCercanaAllUsers(@PathVariable String userLocationWKT) {
+        try {
+            return ResponseEntity.ok(taskService.getTareaPendienteMasCercanaParaCualquierUsuario(userLocationWKT));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
+    }
 }

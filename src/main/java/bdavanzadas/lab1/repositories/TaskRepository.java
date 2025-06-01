@@ -1,15 +1,19 @@
 package bdavanzadas.lab1.repositories;
 
+import bdavanzadas.lab1.entities.SectorEntity;
 import bdavanzadas.lab1.entities.TaskEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +22,8 @@ public class TaskRepository implements TaskRepositoryInt{
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private SectorRepository sectorRepository;
 
     // Create
     public TaskEntity save(TaskEntity task) {
@@ -124,6 +130,35 @@ public class TaskRepository implements TaskRepositoryInt{
         return deleted > 0;
     }
 
+    //filter status
+    public List<TaskEntity> findByStatusUser(int userId, String status) {
+        String sql = """
+        SELECT 
+            id, title, description, due_date, status, user_id, sector_id, 
+            ST_AsText(location) as location, created_at
+        FROM 
+            tasks
+        WHERE 
+            user_id = ? AND status = ?
+        """;
+
+        return jdbcTemplate.query(sql, new Object[]{userId, status}, (rs, rowNum) -> {
+            TaskEntity task = new TaskEntity();
+            task.setId(rs.getInt("id"));
+            task.setTitle(rs.getString("title"));
+            task.setDescription(rs.getString("description"));
+            task.setDueDate(rs.getTimestamp("due_date") != null ?
+                    rs.getTimestamp("due_date").toLocalDateTime() : null);
+            task.setStatus(rs.getString("status"));
+            task.setUserId(rs.getInt("user_id"));
+            task.setSectorId(rs.getInt("sector_id"));
+            task.setLocation(rs.getString("location")); // Ya viene como WKT gracias a ST_AsText()
+            task.setCreatedAt(rs.getTimestamp("created_at") != null ?
+                    rs.getTimestamp("created_at").toLocalDateTime() : null);
+            return task;
+        });
+    }
+
     public List<Map<String, Object>> countTasksByUserAndSector(int userId) {
         String sql = """
         SELECT 
@@ -178,5 +213,121 @@ public class TaskRepository implements TaskRepositoryInt{
     }
 
     //3- sector con mas tareas completadas en un radio de 2km
+    public List<Object> findSectorWithMostCompletedTasksInRadius(int userId, String locationWKT, int radius) {
+        String sql = """
+            SELECT
+                s.name AS sector_name,
+                COUNT(t.id) AS completed_task_count
+            FROM
+                tasks t
+            JOIN
+                sectors s ON t.sector_id = s.id
+            WHERE
+                t.user_id = ?         
+                AND t.status = 'COMPLETED'
+                AND ST_DWithin(
+                        t.location::geography,                
+                        ST_GeomFromText(?, 4326)::geography,  
+                        ?                                     
+                    )
+            GROUP BY
+                s.name
+            ORDER BY
+                completed_task_count DESC
+            LIMIT 1 -- Obtener solo el sector con más tareas
+            """;
 
+        try {
+            return jdbcTemplate.queryForObject(sql, new Object[]{userId, locationWKT, radius}, (rs, rowNum) -> {
+                List<Object> result = new ArrayList<>();
+                result.add(rs.getString("sector_name"));
+                result.add(rs.getLong("completed_task_count")); // Usamos getLong para el conteo
+                return result;
+            });
+        } catch (EmptyResultDataAccessException e) {
+            return Collections.emptyList();
+        }
+    }
+    //4- Promedio de distancia de tareas completadas respecto a mi ubicacion
+    public Float findAverageDistanceOfCompletedTasks(int userId,String locationWKT){
+        String sql = """
+        SELECT AVG(ST_Distance(ST_GeomFromText(?, 4326), t.location::geography)) AS average_distance
+        FROM tasks t
+        WHERE t.user_id = ? AND t.status = 'COMPLETED'
+        """;
+
+        try {
+            return jdbcTemplate.queryForObject(sql, new Object[]{locationWKT, userId}, Float.class);
+        } catch (EmptyResultDataAccessException e) {
+            return null; // No hay tareas completadas
+        }
+    }
+
+    //5- en que sectores geograficos se concentran la mayoria de pendientes
+
+    public List<SectorEntity> findSectorsWithMostPendingTasks(int userId) {
+        String sql = """
+        SELECT
+            s.id AS sector_id,
+            s.name AS sector_name,
+            ST_AsText(s.location) AS sector_location,
+            COUNT(t.id) AS pending_task_count
+        FROM
+            tasks t
+        JOIN
+            sectors s ON t.sector_id = s.id
+        WHERE
+            t.user_id = ?
+            AND t.status = 'PENDING'
+        GROUP BY
+            s.id, s.name, s.location
+        ORDER BY
+            pending_task_count DESC
+        LIMIT 3
+        """;
+
+        RowMapper<SectorEntity> rowMapper = (rs, rowNum) -> {
+            SectorEntity sector = new SectorEntity();
+            sector.setId(rs.getInt("sector_id"));
+            sector.setName(rs.getString("sector_name"));
+            sector.setLocation(rs.getString("sector_location"));
+            return sector;
+        };
+
+        // Usa jdbcTemplate.query() para obtener una lista de objetos
+        return jdbcTemplate.query(sql, new Object[]{userId}, rowMapper);
+    }
+
+    // 6- tarea pendiente mas cercana al usuario(de cualquier usuario)
+    public TaskEntity findNearestPendingTask(String locationWKT) {
+        String sql = """
+        SELECT id, title, description, due_date, status, user_id, sector_id, 
+               ST_AsText(location) as location_wkt, created_at
+        FROM tasks
+        WHERE status = 'PENDING'
+        ORDER BY ST_Distance(ST_GeomFromText(?, 4326), location) 
+        LIMIT 1
+        """;
+
+        try {
+            return jdbcTemplate.queryForObject(sql, new Object[]{locationWKT}, (rs, rowNum) -> {
+                TaskEntity task = new TaskEntity();
+                task.setId(rs.getInt("id"));
+                task.setTitle(rs.getString("title"));
+                task.setDescription(rs.getString("description"));
+                task.setDueDate(rs.getTimestamp("due_date") != null ?
+                        rs.getTimestamp("due_date").toLocalDateTime() : null);
+                task.setStatus(rs.getString("status"));
+                task.setUserId(rs.getInt("user_id"));
+                task.setSectorId(rs.getInt("sector_id"));
+                task.setLocation(rs.getString("location_wkt")); // Usar el alias location_wkt
+                task.setCreatedAt(rs.getTimestamp("created_at") != null ?
+                        rs.getTimestamp("created_at").toLocalDateTime() : null);
+                return task;
+            });
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
 }
+
