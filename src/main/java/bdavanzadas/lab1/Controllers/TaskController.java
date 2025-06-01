@@ -161,10 +161,10 @@ public class TaskController {
     }
 
     @GetMapping("/filtro")
-    public List<TaskEntity> filtrarTareasPorEstadoYPalabra(@RequestBody FilterDTO filterDTO) {
-        String status = filterDTO.getStatus();
-        String word = filterDTO.getWord();
-        return taskService.filtrarTareasPorEstadoYPalabra(status,word);
+    public List<TaskEntity> filtrarTareasPorEstadoYPalabra(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String word) {
+        return taskService.filtrarTareasPorEstadoYPalabra(status, word);
     }
 
     @GetMapping("/tareasbysectors/{idusuario}")
@@ -257,10 +257,23 @@ public class TaskController {
     }
 
     @GetMapping("/tareas-usuarios-por-sector")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getTareasUsuariosPorSector() {
         try {
             return ResponseEntity.ok(taskService.getTareasPorUsuarioPorSector());
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
+        }
+    }
+
+    @GetMapping("/sector-mas-tareas-5k/{locationWKT}")
+    public ResponseEntity<?> getSectorMasTareas5k(@PathVariable String locationWKT) {
+        try {
+            List<Object> sector = taskService.getSectorconmastareasCompletadasEn5km(locationWKT);
+            return ResponseEntity.ok(sector);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
         } catch (RuntimeException e) {

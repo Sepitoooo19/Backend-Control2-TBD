@@ -341,5 +341,25 @@ public class TaskService {
         return taskRepository.getTaskCountSector();
     }
 
+    // 8- Cuál es el sector con más tareas completadas dentro de un radio de 5 km
+    //desde la ubicación del usuario?
+    /**
+     * Obtiene el sector con más tareas completadas en un radio de 5 km
+     * alrededor de la ubicación del usuario autenticado.
+     *
+     * @param locationWKT Ubicación del usuario en formato WKT (Well-Known Text).
+     *                        Debe ser una cadena que represente un punto, por ejemplo: "longitud latitud".
+     * @return Una lista de objetos que representan el sector con más tareas completadas en el radio especificado.
+     */
+    public List<Object> getSectorconmastareasCompletadasEn5km(String locationWKT) {
+        // 1.obtener id del usuario autenticado
+        int userId = userService.getAuthenticatedUserId();
+        // 2. transformar entrada
+        locationWKT = "POINT(" + locationWKT + ")";
+
+        // 3. Llamar al repositorio para obtener el sector con más tareas completadas en un radio de 5km
+        return taskRepository.findSectorWithMostCompletedTasksInRadius5km(userId,locationWKT, 5000);
+    }
+
 
 }

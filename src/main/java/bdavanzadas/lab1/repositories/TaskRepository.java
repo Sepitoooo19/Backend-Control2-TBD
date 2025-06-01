@@ -357,5 +357,43 @@ public class TaskRepository implements TaskRepositoryInt{
             return row;
         });
     }
+
+    // 8
+    public List<Object> findSectorWithMostCompletedTasksInRadius5km(int userId, String locationWKT, int radius) {
+        String sql = """
+            SELECT
+                s.name AS sector_name,
+                COUNT(t.id) AS completed_task_count
+            FROM
+                tasks t
+            JOIN
+                sectors s ON t.sector_id = s.id
+            WHERE
+                t.user_id = ?         
+                AND t.status = 'COMPLETED'
+                AND ST_DWithin(
+                        t.location::geography,                
+                        ST_GeomFromText(?, 4326)::geography,  
+                        ?                                     
+                    )
+            GROUP BY
+                s.name
+            ORDER BY
+                completed_task_count DESC
+            LIMIT 1 -- Obtener solo el sector con más tareas
+            """;
+
+        try {
+            return jdbcTemplate.queryForObject(sql, new Object[]{userId, locationWKT, radius}, (rs, rowNum) -> {
+                List<Object> result = new ArrayList<>();
+                result.add(rs.getString("sector_name"));
+                result.add(rs.getLong("completed_task_count"));
+                return result;
+            });
+        } catch (EmptyResultDataAccessException e) {
+            return Collections.emptyList();
+        }
+    }
+
 }
 
