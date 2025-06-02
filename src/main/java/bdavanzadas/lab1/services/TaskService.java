@@ -2,6 +2,7 @@ package bdavanzadas.lab1.services;
 
 import bdavanzadas.lab1.entities.SectorEntity;
 import bdavanzadas.lab1.entities.TaskEntity;
+import bdavanzadas.lab1.entities.UserEntity;
 import bdavanzadas.lab1.repositories.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -359,6 +360,37 @@ public class TaskService {
 
         // 3. Llamar al repositorio para obtener el sector con más tareas completadas en un radio de 5km
         return taskRepository.findSectorWithMostCompletedTasksInRadius5km(userId,locationWKT, 5000);
+    }
+
+    // 9-¿Cuál es el promedio de distancia entre las tareas completadas y el punto
+    //registrado del usuario?
+    /**
+     * Obtiene el promedio de distancia de las tareas completadas
+     * respecto a la ubicación registrada del usuario autenticado.
+     *
+     * @return El promedio de distancia de las tareas completadas respecto a la ubicación del usuario.
+     * @throws RuntimeException si el usuario no tiene una ubicación registrada válida o si no hay tareas completadas.
+     */
+    public Float getPromedioDistanciaTareasCompletadasDelUsuarioRegistrado() {
+        // 1. Obtener la entidad del usuario autenticado
+        int userId = userService.getAuthenticatedUserId();
+        UserEntity authenticatedUser = userRepository.findById(userId);
+        String userRegisteredLocationWKT = authenticatedUser.getLocation();
+
+        // 2. Validar que el usuario tiene una ubicación registrada
+        if (userRegisteredLocationWKT == null || userRegisteredLocationWKT.trim().isEmpty()) {
+            throw new RuntimeException("El usuario con ID: " + userId + " no tiene una ubicación registrada válida.");
+        }
+
+        // 3. Llamar al repositorio para obtener el promedio de distancia
+        Float averageDistance = taskRepository.findAverageDistanceOfCompletedTasks(userId, userRegisteredLocationWKT);
+
+        // 4. Validar que se obtuvo un resultado (el repositorio devuelve null si no hay tareas completadas)
+        if (averageDistance == null) {
+            throw new RuntimeException("No se encontraron tareas completadas para el usuario con ID: " + userId + " para calcular el promedio de distancia.");
+        }
+
+        return averageDistance;
     }
 
 
