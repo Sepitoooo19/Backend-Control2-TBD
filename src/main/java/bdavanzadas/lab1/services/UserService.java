@@ -153,6 +153,31 @@ public class UserService {
         return userRepository.updateUser(id, username, name, role, wktPoint);
     }
 
+    public boolean updateAuthenticatedUser(Map<String, String> updates) {
+        // Obtener ID del usuario autenticado
+        int authenticatedUserId = getAuthenticatedUserId();
+
+        // Validar que el usuario solo se actualice a sí mismo
+        if (updates.containsKey("id")) {
+            throw new SecurityException("No puedes modificar tu ID de usuario");
+        }
+
+        // Validar formato WKT si se está actualizando la ubicación
+        String wktPoint = updates.get("location");
+        if (wktPoint != null && !wktPoint.startsWith("POINT(")) {
+            throw new IllegalArgumentException("Formato WKT inválido. Use 'POINT(longitud latitud)'");
+        }
+
+        // Actualizar solo los campos proporcionados
+        return userRepository.updateUser(
+                authenticatedUserId,
+                updates.get("username"),
+                updates.get("name"),
+                updates.get("role"),
+                wktPoint
+        );
+    }
+
     // Actualizar contraseña
     public boolean updatePassword(int id, String newPassword) {
         String encodedPassword = encoder.encode(newPassword);

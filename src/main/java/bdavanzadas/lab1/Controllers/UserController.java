@@ -107,6 +107,30 @@ public class UserController {
         }
     }
 
+    @PutMapping("/me")
+    public ResponseEntity<?> updateAuthenticatedUser(@RequestBody Map<String, String> updates) {
+        try {
+            boolean updated = userService.updateAuthenticatedUser(updates);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", updated,
+                    "message", updated ? "Usuario actualizado" : "No se realizaron cambios"
+            ));
+
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", e.getMessage()));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("success", false, "message", "Error al actualizar usuario"));
+        }
+    }
+
     @Operation(
             summary = "Obtener perfil del usuario autenticado",
             description = "Devuelve los datos del usuario actualmente logueado",
