@@ -151,6 +151,19 @@ public class UserRepository implements UserRepositoryInt {
         return affectedRows > 0;
     }
 
+    public boolean updateUserLocation(int id, String wktPoint) {
+        String sql = "UPDATE users SET location = ST_GeomFromText(?, 4326) WHERE id = ?";
+
+        try {
+            int affectedRows = jdbcTemplate.update(sql, wktPoint, id);
+            return affectedRows > 0;
+        } catch (Exception e) {
+            System.err.println("Error actualizando ubicación para usuario ID " + id + ": " + e.getMessage());
+            System.err.println("WKT: " + wktPoint);
+            throw new RuntimeException("Error al actualizar ubicación en base de datos", e);
+        }
+    }
+
     // Actualizar contraseña (método separado por seguridad)
     public boolean updatePassword(int id, String newEncodedPassword) {
         String sql = "UPDATE users SET password = ? WHERE id = ?";

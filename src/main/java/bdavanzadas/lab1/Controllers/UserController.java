@@ -29,8 +29,6 @@ public class UserController {
     private UserService userService;
 
 
-
-
     @Operation(summary = "Obtener todos los usuarios",
             description = "Retorna una lista de todos los usuarios registrados con sus ubicaciones en formato WKT",
             responses = {
@@ -63,7 +61,6 @@ public class UserController {
     }
 
 
-
     @Operation(summary = "Actualizar usuario",
             description = "Actualiza los datos de un usuario existente",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -73,12 +70,12 @@ public class UserController {
                             mediaType = "application/json",
                             examples = @ExampleObject(
                                     value = """
-                               {
-                                   "username": "nuevo_username",
-                                   "name": "Nuevo Nombre",
-                                   "role": "USER",
-                                   "location": "POINT(-70.700 -33.500)"
-                               }"""
+                                            {
+                                                "username": "nuevo_username",
+                                                "name": "Nuevo Nombre",
+                                                "role": "USER",
+                                                "location": "POINT(-70.700 -33.500)"
+                                            }"""
                             )
                     )
             ),
@@ -107,31 +104,72 @@ public class UserController {
         }
     }
 
-    @PutMapping("/me")
-    public ResponseEntity<?> updateAuthenticatedUser(@RequestBody Map<String, String> updates) {
+    @PutMapping("/me/location")
+    public ResponseEntity<?> updateAuthenticatedUserLocation(@RequestBody Map<String, Object> locationData) {
         try {
-            boolean updated = userService.updateAuthenticatedUser(updates);
+            // 1. Validar datos de entrada
+            if (locationData == null || locationData.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Datos de ubicación requeridos"));
+            }
 
-            return ResponseEntity.ok(Map.of(
-                    "success", updated,
-                    "message", updated ? "Usuario actualizado" : "No se realizaron cambios"
-            ));
+            if (!locationData.containsKey("latitude") || !locationData.containsKey("longitude")) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Latitud y longitud son requeridas"));
+            }
 
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("success", false, "message", e.getMessage()));
+            // 2. Extraer y validar coordenadas
+            Object latObj = locationData.get("latitude");
+            Object lngObj = locationData.get("longitude");
+
+            if (latObj == null || lngObj == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Latitud y longitud no pueden ser null"));
+            }
+
+            Double latitude = ((Number) latObj).doubleValue();
+            Double longitude = ((Number) lngObj).doubleValue();
+
+            // 3. Actualizar ubicación usando JWT para identificar usuario
+            boolean updated = userService.updateAuthenticatedUserLocation(latitude, longitude);
+
+            if (updated) {
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "message", "Ubicación actualizada correctamente",
+                        "location", Map.of(
+                                "latitude", latitude,
+                                "longitude", longitude
+                        )
+                ));
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "No se pudo actualizar la ubicación"));
+            }
+
+        } catch (NumberFormatException | ClassCastException e) {
+            // Consolidar excepciones de formato numérico
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Formato de coordenadas inválido: " + e.getMessage()));
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", e.getMessage()));
 
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Usuario no autenticado")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "Token JWT inválido o expirado"));
+            }
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "Error al actualizar usuario"));
+                    .body(Map.of("success", false, "message", "Error interno del servidor: " + e.getMessage()));
         }
     }
-
-    @Operation(
+@Operation(
             summary = "Obtener perfil del usuario autenticado",
             description = "Devuelve los datos del usuario actualmente logueado",
             responses = {

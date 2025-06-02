@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -152,32 +153,28 @@ public class UserService {
         }
         return userRepository.updateUser(id, username, name, role, wktPoint);
     }
-
-    public boolean updateAuthenticatedUser(Map<String, String> updates) {
-        // Obtener ID del usuario autenticado
+    public boolean updateAuthenticatedUserLocation(double latitude, double longitude) {
+        // 1. Obtener ID del usuario autenticado usando JWT
         int authenticatedUserId = getAuthenticatedUserId();
 
-        // Validar que el usuario solo se actualice a sí mismo
-        if (updates.containsKey("id")) {
-            throw new SecurityException("No puedes modificar tu ID de usuario");
+        // 2. Validar coordenadas
+        if (latitude < -90 || latitude > 90) {
+            throw new IllegalArgumentException("Latitud debe estar entre -90 y 90 grados");
+        }
+        if (longitude < -180 || longitude > 180) {
+            throw new IllegalArgumentException("Longitud debe estar entre -180 y 180 grados");
         }
 
-        // Validar formato WKT si se está actualizando la ubicación
-        String wktPoint = updates.get("location");
-        if (wktPoint != null && !wktPoint.startsWith("POINT(")) {
-            throw new IllegalArgumentException("Formato WKT inválido. Use 'POINT(longitud latitud)'");
-        }
+        // 3. Crear WKT Point (longitud primero, luego latitud)
+        String wktPoint = String.format("POINT(%f %f)", longitude, latitude);
 
-        // Actualizar solo los campos proporcionados
-        return userRepository.updateUser(
-                authenticatedUserId,
-                updates.get("username"),
-                updates.get("name"),
-                updates.get("role"),
-                wktPoint
-        );
+        // 4. Actualizar en base de datos
+        try {
+            return userRepository.updateUserLocation(authenticatedUserId, wktPoint);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al actualizar ubicación del usuario autenticado", e);
+        }
     }
-
     // Actualizar contraseña
     public boolean updatePassword(int id, String newPassword) {
         String encodedPassword = encoder.encode(newPassword);
