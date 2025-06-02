@@ -191,10 +191,10 @@ public class TaskController {
         }
     }
 
-    @GetMapping("/tarea-pendiente-cerca/{userLocationWKT}")
-    public ResponseEntity<?> getTareasPendienteCerca(@PathVariable String userLocationWKT) {
+    @GetMapping("/tarea-pendiente-cerca")
+    public ResponseEntity<?> getTareasPendienteCerca() {
         try {
-            return ResponseEntity.ok(taskService.getTareaPendienteMasCercana(userLocationWKT));
+            return ResponseEntity.ok(taskService.getTareaPendienteMasCercana());
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
         } catch (RuntimeException e) {
@@ -204,10 +204,10 @@ public class TaskController {
         }
     }
 
-    @GetMapping("/sector-mas-tareas-2k/{locationWKT}")
-    public ResponseEntity<?> getSectorMasTareas(@PathVariable String locationWKT) {
+    @GetMapping("/sector-mas-tareas-2k")
+    public ResponseEntity<?> getSectorMasTareas() {
         try {
-            List<Object> sector = taskService.getSectorconmastareasCompletadasEn2km(locationWKT);
+            List<Object> sector = taskService.getSectorconmastareasCompletadasEn2km();
             return ResponseEntity.ok(sector);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
@@ -218,10 +218,10 @@ public class TaskController {
         }
     }
 
-    @GetMapping("/promedio-distancia-tareas-completadas/{locationWKT}")
-    public ResponseEntity<?> getPromedioDistanciaTareasCompletadas(@PathVariable String locationWKT) {
+    @GetMapping("/promedio-distancia-tareas-completadas")
+    public ResponseEntity<?> getPromedioDistanciaTareasCompletadas() {
         try {
-            return ResponseEntity.ok(taskService.getPromedioDistanciaTareasCompletadas(locationWKT));
+            return ResponseEntity.ok(taskService.getPromedioDistanciaTareasCompletadas());
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
         } catch (RuntimeException e) {
@@ -230,6 +230,7 @@ public class TaskController {
             return ResponseEntity.internalServerError().body("Error al procesar la solicitud");
         }
     }
+
     @GetMapping("/sectores-con-mas-tareas-pendientes")
     public ResponseEntity<?> getTareasPorSectores() {
         try {
@@ -243,10 +244,10 @@ public class TaskController {
         }
     }
 
-    @GetMapping("/tarea-pendiente-mas-cerca-allusers/{userLocationWKT}")
-    public ResponseEntity<?> getTareaPendienteMasCercanaAllUsers(@PathVariable String userLocationWKT) {
+    @GetMapping("/tarea-pendiente-mas-cerca-allusers")
+    public ResponseEntity<?> getTareaPendienteMasCercanaAllUsers() {
         try {
-            return ResponseEntity.ok(taskService.getTareaPendienteMasCercanaParaCualquierUsuario(userLocationWKT));
+            return ResponseEntity.ok(taskService.getTareaPendienteMasCercanaParaCualquierUsuario());
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");
         } catch (RuntimeException e) {
@@ -269,10 +270,10 @@ public class TaskController {
         }
     }
 
-    @GetMapping("/sector-mas-tareas-5k/{locationWKT}")
-    public ResponseEntity<?> getSectorMasTareas5k(@PathVariable String locationWKT) {
+    @GetMapping("/sector-mas-tareas-5k")
+    public ResponseEntity<?> getSectorMasTareas5k() {
         try {
-            List<Object> sector = taskService.getSectorconmastareasCompletadasEn5km(locationWKT);
+            List<Object> sector = taskService.getSectorconmastareasCompletadasEn5km();
             return ResponseEntity.ok(sector);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Debe estar autenticado para acceder a este recurso");

@@ -187,6 +187,18 @@ public class TaskService {
                 .collect(Collectors.toList()); // Recolectamos los resultados en una nueva lista
     }
 
+    private String getAuthenticatedUserLocationWKT() {
+        int userId = userService.getAuthenticatedUserId();
+        String location = userService.getAuthenticatedUserLocation();
+        return location; // Ya viene en formato WKT desde la BD
+    }
+
+    private void validateLocationExists(String locationWKT) {
+        if (locationWKT == null || locationWKT.trim().isEmpty()) {
+            throw new RuntimeException("El usuario no tiene ubicación registrada");
+        }
+    }
+
     // REQUERIMIENTOS FUNCIONALES
 
     // 1- TAREAS DEL USUARIO POR SECTOR
@@ -227,15 +239,14 @@ public class TaskService {
      * Obtiene la tarea pendiente más cercana al usuario autenticado
      * según su ubicación geográfica.
      *
-     * @param userLocationWKT Ubicación del usuario en formato WKT (Well-Known Text).
-     *                        Debe ser una cadena que represente un punto, por ejemplo: "longitud latitud".
+     *
+     *
      * @return La tarea pendiente más cercana al usuario.
      */
-    public TaskEntity getTareaPendienteMasCercana(String userLocationWKT){
-        // 1. obtener el id del usuario autenticado
+    public TaskEntity getTareaPendienteMasCercana() {
         int userId = userService.getAuthenticatedUserId();
-        userLocationWKT="POINT("+userLocationWKT+")";
-        // 2. llamar al repositorio para obtener la tarea pendiente más cercana
+        String userLocationWKT = getAuthenticatedUserLocationWKT();
+        validateLocationExists(userLocationWKT);
         return taskRepository.findNearestPendingTaskForUser(userId, userLocationWKT);
     }
 
@@ -244,19 +255,14 @@ public class TaskService {
      * Obtiene el sector con más tareas completadas en un radio de 2 km
      * alrededor de la ubicación del usuario autenticado.
      *
-     * @param locationWKT Ubicación del usuario en formato WKT (Well-Known Text).
-     *                        Debe ser una cadena que represente un punto, por ejemplo: "longitud latitud".
-     *                        El formato debe ser "POINT(longitud latitud)".
+     *
      * @return El sector con más tareas completadas en el radio especificado.
      */
-    public List<Object> getSectorconmastareasCompletadasEn2km(String locationWKT) {
-        // 1.obtener id del usuario autenticado
+    public List<Object> getSectorconmastareasCompletadasEn2km() {
         int userId = userService.getAuthenticatedUserId();
-        // 2. transformar entrada
-        locationWKT = "POINT(" + locationWKT + ")";
-
-        // 3. Llamar al repositorio para obtener el sector con más tareas completadas en un radio de 2km
-        return taskRepository.findSectorWithMostCompletedTasksInRadius(userId,locationWKT, 2000);
+        String locationWKT = getAuthenticatedUserLocationWKT();
+        validateLocationExists(locationWKT);
+        return taskRepository.findSectorWithMostCompletedTasksInRadius(userId, locationWKT, 2000);
     }
 
 
@@ -266,20 +272,18 @@ public class TaskService {
      * Obtiene el promedio de distancia de las tareas completadas
      * respecto a la ubicación del usuario autenticado.
      *
-     * @param locationWKT Ubicación del usuario en formato WKT (Well-Known Text).
-     *                        Debe ser una cadena que represente un punto, por ejemplo: "longitud latitud".
+     *
      * @return El promedio de distancia de las tareas completadas respecto a la ubicación del usuario.
      */
-    public Float getPromedioDistanciaTareasCompletadas(String locationWKT) {
-        // 1. Obtener el ID del usuario autenticado
+    public Float getPromedioDistanciaTareasCompletadas() {
         int userId = userService.getAuthenticatedUserId();
-        locationWKT = "POINT(" + locationWKT + ")";
-        // 2. Llamar al repositorio para obtener el promedio de distancia de las tareas completadas
+        String locationWKT = getAuthenticatedUserLocationWKT();
+        validateLocationExists(locationWKT);
+
         Float averageDistance = taskRepository.findAverageDistanceOfCompletedTasks(userId, locationWKT);
 
-        // 3. Validar que se obtuvo un resultado
         if (averageDistance == null) {
-            throw new RuntimeException("No se encontraron tareas completadas para el usuario con ID: " + userId);
+            throw new RuntimeException("No se encontraron tareas completadas para el usuario");
         }
 
         return averageDistance;
@@ -293,15 +297,11 @@ public class TaskService {
      * @return Una lista de entidades SectorEntity que representan los sectores con más tareas pendientes.
      */
     public List<SectorEntity> getSectorsWithMostPendingTasks() {
-        // 1. Obtener el ID del usuario autenticado
         int userId = userService.getAuthenticatedUserId();
-
-        // 2. Llamar al repositorio para obtener los sectores con más tareas pendientes
         List<SectorEntity> sectors = taskRepository.findSectorsWithMostPendingTasks(userId);
 
-        // 3. Validar que se encontraron sectores
         if (sectors.isEmpty()) {
-            throw new RuntimeException("No se encontraron sectores con tareas pendientes para el usuario con ID: " + userId);
+            throw new RuntimeException("No se encontraron sectores con tareas pendientes");
         }
 
         return sectors;
@@ -312,20 +312,16 @@ public class TaskService {
      * Obtiene la tarea pendiente más cercana a la ubicación del usuario,
      * sin importar el usuario al que pertenezca la tarea.
      *
-     * @param userLocationWKT Ubicación del usuario en formato WKT (Well-Known Text).
-     *                        Debe ser una cadena que represente un punto, por ejemplo: "longitud latitud".
      * @return La tarea pendiente más cercana a la ubicación proporcionada.
      */
-    public TaskEntity getTareaPendienteMasCercanaParaCualquierUsuario(String userLocationWKT) {
-        // 1. Transformar la ubicación del usuario al formato POINT
-        userLocationWKT = "POINT(" + userLocationWKT + ")";
+    public TaskEntity getTareaPendienteMasCercanaParaCualquierUsuario() {
+        String userLocationWKT = getAuthenticatedUserLocationWKT();
+        validateLocationExists(userLocationWKT);
 
-        // 2. Llamar al repositorio para obtener la tarea pendiente más cercana a cualquier usuario
         TaskEntity nearestPendingTask = taskRepository.findNearestPendingTask(userLocationWKT);
 
-        // 3. Validar que se encontró una tarea
         if (nearestPendingTask == null) {
-            throw new RuntimeException("No se encontraron tareas pendientes cercanas a la ubicación proporcionada.");
+            throw new RuntimeException("No se encontraron tareas pendientes cercanas");
         }
 
         return nearestPendingTask;
@@ -348,18 +344,13 @@ public class TaskService {
      * Obtiene el sector con más tareas completadas en un radio de 5 km
      * alrededor de la ubicación del usuario autenticado.
      *
-     * @param locationWKT Ubicación del usuario en formato WKT (Well-Known Text).
-     *                        Debe ser una cadena que represente un punto, por ejemplo: "longitud latitud".
-     * @return Una lista de objetos que representan el sector con más tareas completadas en el radio especificado.
+      * @return Una lista de objetos que representan el sector con más tareas completadas en el radio especificado.
      */
-    public List<Object> getSectorconmastareasCompletadasEn5km(String locationWKT) {
-        // 1.obtener id del usuario autenticado
+    public List<Object> getSectorconmastareasCompletadasEn5km() {
         int userId = userService.getAuthenticatedUserId();
-        // 2. transformar entrada
-        locationWKT = "POINT(" + locationWKT + ")";
-
-        // 3. Llamar al repositorio para obtener el sector con más tareas completadas en un radio de 5km
-        return taskRepository.findSectorWithMostCompletedTasksInRadius5km(userId,locationWKT, 5000);
+        String locationWKT = getAuthenticatedUserLocationWKT();
+        validateLocationExists(locationWKT);
+        return taskRepository.findSectorWithMostCompletedTasksInRadius5km(userId, locationWKT, 5000);
     }
 
     // 9-¿Cuál es el promedio de distancia entre las tareas completadas y el punto
@@ -372,22 +363,25 @@ public class TaskService {
      * @throws RuntimeException si el usuario no tiene una ubicación registrada válida o si no hay tareas completadas.
      */
     public Float getPromedioDistanciaTareasCompletadasDelUsuarioRegistrado() {
-        // 1. Obtener la entidad del usuario autenticado
+        // Este método ya usa la ubicación registrada, no necesita cambios
         int userId = userService.getAuthenticatedUserId();
         UserEntity authenticatedUser = userRepository.findById(userId);
-        String userRegisteredLocationWKT = authenticatedUser.getLocation();
-
-        // 2. Validar que el usuario tiene una ubicación registrada
-        if (userRegisteredLocationWKT == null || userRegisteredLocationWKT.trim().isEmpty()) {
-            throw new RuntimeException("El usuario con ID: " + userId + " no tiene una ubicación registrada válida.");
+        if (authenticatedUser == null) {
+            throw new RuntimeException("Usuario no encontrado");
         }
 
-        // 3. Llamar al repositorio para obtener el promedio de distancia
-        Float averageDistance = taskRepository.findAverageDistanceOfCompletedTasks(userId, userRegisteredLocationWKT);
+        String userRegisteredLocationWKT = authenticatedUser.getLocation();
+        if (userRegisteredLocationWKT == null || userRegisteredLocationWKT.trim().isEmpty()) {
+            throw new RuntimeException("El usuario no tiene ubicación registrada válida");
+        }
 
-        // 4. Validar que se obtuvo un resultado (el repositorio devuelve null si no hay tareas completadas)
+        Float averageDistance = taskRepository.findAverageDistanceOfCompletedTasks(
+                userId,
+                userRegisteredLocationWKT
+        );
+
         if (averageDistance == null) {
-            throw new RuntimeException("No se encontraron tareas completadas para el usuario con ID: " + userId + " para calcular el promedio de distancia.");
+            throw new RuntimeException("No se encontraron tareas completadas para el usuario");
         }
 
         return averageDistance;

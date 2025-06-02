@@ -395,5 +395,29 @@ public class TaskRepository implements TaskRepositoryInt{
         }
     }
 
+    public Double findAverageDistanceOfCompletedTasks(Long userId, String userLocationWkt) {
+        String sql = """
+            SELECT AVG(ST_Distance(
+                CAST(? AS geography),
+                location::geography
+            )) 
+            FROM tasks 
+            WHERE user_id = ? 
+            AND status = 'COMPLETED'
+            AND location IS NOT NULL
+            """;
+
+        try {
+            return jdbcTemplate.queryForObject(
+                    sql,
+                    Double.class,
+                    userLocationWkt,
+                    userId
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
 }
 

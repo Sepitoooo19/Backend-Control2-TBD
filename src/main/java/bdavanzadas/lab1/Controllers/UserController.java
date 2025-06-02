@@ -171,6 +171,27 @@ public class UserController {
         }
     }
 
+    // getAuthenticatedUserLocation
+    @GetMapping("/location")
+    public ResponseEntity<?> getAuthenticatedUserLocation() {
+        try {
+            String wktLocation = userService.getAuthenticatedUserLocation();
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "location", wktLocation,
+                    "coordinates", userService.parseWktToCoordinates(wktLocation)
+            ));
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "success", false,
+                            "message", e.getMessage()
+                    ));
+        }
+    }
+
 
 
 

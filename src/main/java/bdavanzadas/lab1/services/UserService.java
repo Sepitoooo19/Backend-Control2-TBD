@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -158,5 +159,42 @@ public class UserService {
         return userRepository.updatePassword(id, encodedPassword);
     }
 
+    /**
+     * Método para obtener la ubicación del usuario autenticado.
+     * @return La ubicación en formato WKT o null si no se encuentra.
+     */
+    public String getAuthenticatedUserLocation() {
+        int userId = getAuthenticatedUserId();
+        String location = userRepository.findUserLocationById(userId);
+
+        if (location == null || location.trim().isEmpty()) {
+            throw new RuntimeException("El usuario no tiene ubicación registrada");
+        }
+
+        // Validar que es un POINT válido
+        if (!isValidWktPoint(location)) {
+            throw new RuntimeException("Formato de ubicación inválido en la base de datos");
+        }
+
+        return location;
+    }
+
+    public boolean isValidWktPoint(String wkt) {
+        return wkt != null && wkt.matches("^POINT\\([-+]?\\d+\\.?\\d* [-+]?\\d+\\.?\\d*\\)$");
+    }
+
+    public Map<String, Double> parseWktToCoordinates(String wkt) {
+        if (!wkt.startsWith("POINT(")) {
+            throw new IllegalArgumentException("Formato WKT no válido");
+        }
+
+        String coordStr = wkt.substring(6, wkt.length() - 1); // Elimina "POINT(" y ")"
+        String[] coords = coordStr.split(" ");
+
+        return Map.of(
+                "longitude", Double.parseDouble(coords[0]),
+                "latitude", Double.parseDouble(coords[1])
+        );
+    }
 
 }

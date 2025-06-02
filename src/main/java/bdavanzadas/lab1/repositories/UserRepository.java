@@ -157,4 +157,14 @@ public class UserRepository implements UserRepositoryInt {
         return jdbcTemplate.update(sql, newEncodedPassword, id) > 0;
     }
 
+    public String findUserLocationById(int userId) {
+        String sql = "SELECT ST_AsText(location) as location_wkt FROM users WHERE id = ?";
+
+        try {
+            return jdbcTemplate.queryForObject(sql, String.class, userId);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
 }
