@@ -215,7 +215,6 @@ public class TaskRepository implements TaskRepositoryInt {
         return jdbcTemplate.queryForList(sql, userId);
     }
 
-<<<<<<< Updated upstream
     /**
      * Método para encontrar la tarea pendiente más cercana a un usuario.
      * @param "userId" El ID del usuario para el que se busca la tarea.
