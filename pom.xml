@@ -95,21 +95,11 @@
 
 	<build>
 		<plugins>
+			<!-- Plugin para compilar y procesar anotaciones (Lombok) -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.10.1</version> <!-- puedes especificar versión -->
 				<configuration>
 					<annotationProcessorPaths>
 						<path>
@@ -118,7 +108,23 @@
 							<version>1.18.30</version>
 						</path>
 					</annotationProcessorPaths>
+					<source>17</source> <!-- ajusta según la versión de Java que uses -->
+					<target>17</target>
 				</configuration>
+			</plugin>
+
+			<!-- Plugin para empaquetar JAR ejecutable de Spring Boot -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>3.4.4</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
