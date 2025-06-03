@@ -215,6 +215,7 @@ public class TaskRepository implements TaskRepositoryInt {
         return jdbcTemplate.queryForList(sql, userId);
     }
 
+<<<<<<< Updated upstream
     /**
      * Método para encontrar la tarea pendiente más cercana a un usuario.
      * @param "userId" El ID del usuario para el que se busca la tarea.
@@ -487,5 +488,32 @@ public class TaskRepository implements TaskRepositoryInt {
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
+    }
+
+    /**
+     * Método para contar las tareas por sector y usuarios.
+     * @return lista con el conteo de tareas asignadas a cada usuario,
+     * agrupadas por sector.
+     */
+    public List<Map<String, Object>> countTasksByAllUsersAndSectors() {
+        String sql = """
+        SELECT 
+            u.id AS user_id,
+            u.name AS user_name,
+            s.name AS sector_name, 
+            COUNT(t.id) AS task_count
+        FROM 
+            tasks t
+        JOIN 
+            users u ON t.user_id = u.id
+        JOIN 
+            sectors s ON t.sector_id = s.id
+        GROUP BY 
+            u.id, u.name, s.name
+        ORDER BY 
+            u.name, s.name
+        """;
+
+        return jdbcTemplate.queryForList(sql);
     }
 }

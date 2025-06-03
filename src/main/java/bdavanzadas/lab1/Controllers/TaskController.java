@@ -269,6 +269,11 @@ public class TaskController {
         }
     }
 
+    @GetMapping("/distribution-by-user-sector")
+    public Map<String, Object> getTaskDistribution() {
+        return taskService.getTaskDistributionByUserAndSector();
+    }
+
     @GetMapping("/mis-tareas-por-sector")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Obtener mis tareas agrupadas por sector",

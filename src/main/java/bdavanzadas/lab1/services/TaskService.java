@@ -9,13 +9,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import bdavanzadas.lab1.repositories.SectorRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import bdavanzadas.lab1.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class TaskService {
@@ -268,6 +270,36 @@ public class TaskService {
                     return entry;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public Map<String, Object> getTaskDistributionByUserAndSector() {
+        List<Map<String, Object>> rawData = taskRepository.countTasksByAllUsersAndSectors();
+
+        // Get all unique sector names
+        Set<String> sectors = rawData.stream()
+                .map(row -> (String) row.get("sector_name"))
+                .collect(Collectors.toCollection(TreeSet::new)); // Sorted
+
+        // Group by user
+        Map<String, Map<String, Long>> userData = rawData.stream()
+                .collect(Collectors.groupingBy(
+                        row -> (String) row.get("user_name"),
+                        Collectors.toMap(
+                                row -> (String) row.get("sector_name"),
+                                row -> ((Number) row.get("task_count")).longValue()
+                        )
+                ));
+
+        // Ensure all sectors are present for each user with 0 if missing
+        userData.forEach((user, sectorCounts) -> {
+            sectors.forEach(sector -> sectorCounts.putIfAbsent(sector, 0L));
+        });
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("sectors", new ArrayList<>(sectors));
+        result.put("userData", userData);
+
+        return result;
     }
 
     public List<Map<String, Object>> getTasksByAuthenticatedUserAndSector() {
