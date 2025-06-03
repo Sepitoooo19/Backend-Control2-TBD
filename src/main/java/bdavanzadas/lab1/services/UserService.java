@@ -12,14 +12,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-
 /**
- *
- * La clase UserService representa el servicio de usuarios en la aplicación.
- * Esta clase contiene métodos para registrar usuarios, validar credenciales y obtener el ID del usuario autenticado.
- *
- *
- * */
+ * Servicio de usuarios que proporciona operaciones para registrar, autenticar,
+ * actualizar y eliminar usuarios, así como gestionar su ubicación geográfica.
+ */
 @Service
 public class UserService {
 
@@ -30,7 +26,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-
     /**
      * Codificador de contraseñas.
      * Este codificador se utiliza para codificar las contraseñas de los usuarios antes de guardarlas en la base de datos.
@@ -39,13 +34,14 @@ public class UserService {
     private PasswordEncoder encoder;
 
     /**
-     * Registra un nuevo usuario administrador con ubicación geográfica.
-     * @param username Nombre de usuario (único)
-     * @param password Contraseña (se hashea automáticamente)
-     * @param name Nombre completo
-     * @param role Rol del usuario (debe ser "ADMIN")
-     * @param wktPoint Ubicación en formato WKT ("POINT(longitud latitud)")
-     * @throws IllegalArgumentException Si el WKT es inválido
+     * Registra un nuevo usuario con rol de administrador.
+     *
+     * @param username Nombre de usuario único.
+     * @param password Contraseña del usuario.
+     * @param name     Nombre completo del usuario.
+     * @param role     Rol del usuario (no se utiliza, siempre se asigna "ADMIN").
+     * @param wktPoint Ubicación del usuario en formato WKT ("POINT(long lat)").
+     * @throws IllegalArgumentException Si el formato del punto es inválido.
      */
     public void registerAdmin(String username, String password, String name, String role, String wktPoint) {
         if (wktPoint == null || !wktPoint.startsWith("POINT(")) {
@@ -56,20 +52,21 @@ public class UserService {
         UserEntity user = new UserEntity();
         user.setUsername(username);
         user.setPassword(encodedPassword);
-        user.setRole("ADMIN"); // Fuerza el rol ADMIN
+        user.setRole("ADMIN");
         user.setName(name);
         user.setLocation(wktPoint);
         userRepository.save(user);
     }
 
     /**
-     * Registra un nuevo usuario estándar con ubicación geográfica.
-     * @param username Nombre de usuario (único)
-     * @param password Contraseña (se hashea automáticamente)
-     * @param name Nombre completo
-     * @param role Rol del usuario (debe ser "USER")
-     * @param wktPoint Ubicación en formato WKT ("POINT(longitud latitud)")
-     * @throws IllegalArgumentException Si el WKT es inválido
+     * Registra un nuevo usuario estándar.
+     *
+     * @param username Nombre de usuario único.
+     * @param password Contraseña del usuario.
+     * @param name     Nombre completo del usuario.
+     * @param role     Rol del usuario (no se utiliza, siempre se asigna "USER").
+     * @param wktPoint Ubicación del usuario en formato WKT ("POINT(long lat)").
+     * @throws IllegalArgumentException Si el formato del punto es inválido.
      */
     public void registerUser(String username, String password, String name, String role, String wktPoint) {
         if (wktPoint == null || !wktPoint.startsWith("POINT(")) {
@@ -80,20 +77,19 @@ public class UserService {
         UserEntity user = new UserEntity();
         user.setUsername(username);
         user.setPassword(encodedPassword);
-        user.setRole("USER"); // Fuerza el rol USER
+        user.setRole("USER");
         user.setName(name);
         user.setLocation(wktPoint);
         userRepository.save(user);
     }
-    /**
-     * Metodo para validar las credenciales de un usuario.
-     * @param "username" El nombre de usuario a validar.
-     * @param "password" La contraseña a validar.
-     * @return El usuario encontrado si las credenciales son válidas, null en caso contrario.
-     *
-     * Este metodo busca un usuario por su nombre de usuario y valida la contraseña.
-     */
 
+    /**
+     * Valida las credenciales de un usuario.
+     *
+     * @param username Nombre de usuario.
+     * @param password Contraseña del usuario.
+     * @return La entidad de usuario si las credenciales son válidas, null en caso contrario.
+     */
     public UserEntity validateCredentials(String username, String password) {
         UserEntity user = userRepository.findByUsername(username);
         if (user != null && encoder.matches(password, user.getPassword())) {
@@ -102,18 +98,17 @@ public class UserService {
         return null;
     }
 
-
     /**
-     * Método para obtener el ID del usuario autenticado como int.
-     * @return El ID del usuario autenticado (int).
-     * @throws RuntimeException Si no hay usuario autenticado o el tipo no es compatible.
+     * Obtiene el ID del usuario autenticado desde el contexto de seguridad.
+     *
+     * @return ID del usuario autenticado.
+     * @throws RuntimeException Si no hay usuario autenticado o el tipo de ID no es compatible.
      */
     public int getAuthenticatedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Integer) {
             return (int) authentication.getPrincipal();
         } else if (authentication != null && authentication.getPrincipal() instanceof Long) {
-            // Conversión segura de Long a int (si el ID cabe en un int)
             long userId = (Long) authentication.getPrincipal();
             if (userId > Integer.MAX_VALUE || userId < Integer.MIN_VALUE) {
                 throw new RuntimeException("El ID de usuario excede el límite de int");
@@ -123,41 +118,74 @@ public class UserService {
         throw new RuntimeException("Usuario no autenticado o tipo de ID no soportado");
     }
 
-    // Obtener todos los usuarios
+    /**
+     * Retorna una lista con todos los usuarios registrados.
+     *
+     * @return Lista de entidades de usuario.
+     */
     public List<UserEntity> getAllUsers() {
         return userRepository.findAll();
     }
 
-    // Obtener usuario por ID
+    /**
+     * Obtiene un usuario por su ID.
+     *
+     * @param id ID del usuario.
+     * @return Entidad del usuario correspondiente o null si no existe.
+     */
     public UserEntity getUserById(int id) {
         return userRepository.findById(id);
     }
 
-
+    /**
+     * Obtiene el perfil del usuario autenticado.
+     *
+     * @return Entidad del usuario autenticado.
+     */
     public UserEntity getAuthenticatedUserProfile() {
-        int userId = getAuthenticatedUserId(); // Usa tu método existente
-
+        int userId = getAuthenticatedUserId();
         return userRepository.findById(userId);
     }
 
-
-    // Eliminar usuario
+    /**
+     * Elimina un usuario por su ID.
+     *
+     * @param id ID del usuario a eliminar.
+     * @return true si se eliminó correctamente, false si no se encontró.
+     */
     public boolean deleteUser(int id) {
         return userRepository.deleteById(id);
     }
 
-    // Actualizar datos de usuario
+    /**
+     * Actualiza los datos de un usuario.
+     *
+     * @param id        ID del usuario.
+     * @param username  Nuevo nombre de usuario.
+     * @param name      Nuevo nombre completo.
+     * @param role      Nuevo rol.
+     * @param wktPoint  Nueva ubicación en formato WKT.
+     * @return true si se actualizó correctamente, false si falló.
+     * @throws IllegalArgumentException Si el formato del punto es inválido.
+     */
     public boolean updateUser(int id, String username, String name, String role, String wktPoint) {
         if (wktPoint != null && !wktPoint.startsWith("POINT(")) {
             throw new IllegalArgumentException("Formato WKT inválido");
         }
         return userRepository.updateUser(id, username, name, role, wktPoint);
     }
+
+    /**
+     * Actualiza la ubicación geográfica del usuario autenticado.
+     *
+     * @param latitude  Latitud (-90 a 90).
+     * @param longitude Longitud (-180 a 180).
+     * @return true si se actualizó correctamente, false en caso de error.
+     * @throws IllegalArgumentException Si las coordenadas son inválidas.
+     */
     public boolean updateAuthenticatedUserLocation(double latitude, double longitude) {
-        // 1. Obtener ID del usuario autenticado usando JWT
         int authenticatedUserId = getAuthenticatedUserId();
 
-        // 2. Validar coordenadas
         if (latitude < -90 || latitude > 90) {
             throw new IllegalArgumentException("Latitud debe estar entre -90 y 90 grados");
         }
@@ -165,25 +193,32 @@ public class UserService {
             throw new IllegalArgumentException("Longitud debe estar entre -180 y 180 grados");
         }
 
-        // 3. Crear WKT Point (longitud primero, luego latitud)
         String wktPoint = String.format("POINT(%f %f)", longitude, latitude);
 
-        // 4. Actualizar en base de datos
         try {
             return userRepository.updateUserLocation(authenticatedUserId, wktPoint);
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar ubicación del usuario autenticado", e);
         }
     }
-    // Actualizar contraseña
+
+    /**
+     * Actualiza la contraseña de un usuario.
+     *
+     * @param id          ID del usuario.
+     * @param newPassword Nueva contraseña (sin encriptar).
+     * @return true si se actualizó correctamente, false si falló.
+     */
     public boolean updatePassword(int id, String newPassword) {
         String encodedPassword = encoder.encode(newPassword);
         return userRepository.updatePassword(id, encodedPassword);
     }
 
     /**
-     * Método para obtener la ubicación del usuario autenticado.
-     * @return La ubicación en formato WKT o null si no se encuentra.
+     * Obtiene la ubicación del usuario autenticado.
+     *
+     * @return Ubicación en formato WKT.
+     * @throws RuntimeException Si no se encuentra la ubicación o es inválida.
      */
     public String getAuthenticatedUserLocation() {
         int userId = getAuthenticatedUserId();
@@ -193,7 +228,6 @@ public class UserService {
             throw new RuntimeException("El usuario no tiene ubicación registrada");
         }
 
-        // Validar que es un POINT válido
         if (!isValidWktPoint(location)) {
             throw new RuntimeException("Formato de ubicación inválido en la base de datos");
         }
@@ -201,10 +235,23 @@ public class UserService {
         return location;
     }
 
+    /**
+     * Valida que un string tenga formato de punto WKT válido.
+     *
+     * @param wkt Cadena en formato WKT.
+     * @return true si es un "POINT(lon lat)" válido, false si no lo es.
+     */
     public boolean isValidWktPoint(String wkt) {
         return wkt != null && wkt.matches("^POINT\\([-+]?\\d+\\.?\\d* [-+]?\\d+\\.?\\d*\\)$");
     }
 
+    /**
+     * Parsea un string WKT a un mapa con las coordenadas numéricas.
+     *
+     * @param wkt Cadena WKT en formato "POINT(long lat)".
+     * @return Mapa con las claves "longitude" y "latitude".
+     * @throws IllegalArgumentException Si el formato WKT es inválido.
+     */
     public Map<String, Double> parseWktToCoordinates(String wkt) {
         if (!wkt.startsWith("POINT(")) {
             throw new IllegalArgumentException("Formato WKT no válido");
@@ -218,5 +265,4 @@ public class UserService {
                 "latitude", Double.parseDouble(coords[1])
         );
     }
-
 }

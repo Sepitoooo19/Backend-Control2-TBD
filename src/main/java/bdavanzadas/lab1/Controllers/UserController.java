@@ -104,6 +104,44 @@ public class UserController {
         }
     }
 
+
+    @Operation(
+            summary = "Actualizar ubicación del usuario autenticado",
+            description = "Permite a un usuario autenticado actualizar su ubicación geográfica. Se espera un objeto con latitud y longitud.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Coordenadas geográficas del usuario (latitude, longitude)",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = """
+                        {
+                            "latitude": -33.500,
+                            "longitude": -70.700
+                        }"""
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Ubicación actualizada correctamente",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(example = """
+                        {
+                            "success": true,
+                            "message": "Ubicación actualizada correctamente",
+                            "location": {
+                                "latitude": -33.500,
+                                "longitude": -70.700
+                            }
+                        }""")
+                            )
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Datos inválidos o incompletos"),
+                    @ApiResponse(responseCode = "401", description = "Token JWT inválido o expirado"),
+                    @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+            }
+    )
     @PutMapping("/me/location")
     public ResponseEntity<?> updateAuthenticatedUserLocation(@RequestBody Map<String, Object> locationData) {
         try {
@@ -233,6 +271,29 @@ public class UserController {
         }
     }
 
+
+    @Operation(
+            summary = "Obtener ubicación del usuario autenticado",
+            description = "Devuelve la ubicación en formato WKT del usuario autenticado y sus coordenadas separadas.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Ubicación obtenida correctamente",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(example = """
+                        {
+                            "success": true,
+                            "location": "POINT(-70.700 -33.500)",
+                            "coordinates": {
+                                "latitude": -33.500,
+                                "longitude": -70.700
+                            }
+                        }""")
+                            )
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Error al obtener ubicación del usuario"),
+                    @ApiResponse(responseCode = "401", description = "No autenticado")
+            }
+    )
     // getAuthenticatedUserLocation
     @GetMapping("/location")
     public ResponseEntity<?> getAuthenticatedUserLocation() {

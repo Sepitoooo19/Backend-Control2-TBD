@@ -32,6 +32,12 @@ public class TaskService {
     @Autowired
     private UserService userService;
 
+    /**
+     * Crea una nueva tarea con validaciones previas.
+     * @param task La tarea a crear.
+     * @return La tarea creada con su ID asignado.
+     * @throws IllegalArgumentException Si los datos de la tarea no son válidos.
+     */
     public TaskEntity createTask(TaskEntity task) {
         // 1. Validar usuario autenticado
         int userId = userService.getAuthenticatedUserId();
@@ -65,8 +71,12 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-
-    // Obtener tarea por ID
+    /**
+     * Obtiene una tarea por su ID.
+     * @param id El ID de la tarea a buscar.
+     * @return La tarea encontrada.
+     * @throws RuntimeException Si no se encuentra la tarea.
+     */
     public TaskEntity getTaskById(int id) {
         TaskEntity task = taskRepository.findById(id);
         if (task == null) {
@@ -75,12 +85,21 @@ public class TaskService {
         return task;
     }
 
-    // Obtener todas las tareas
+    /**
+     * Obtiene todas las tareas existentes.
+     * @return Lista de todas las tareas.
+     */
     public List<TaskEntity> getAllTasks() {
         return taskRepository.findAll();
     }
 
-    // Actualizar una tarea existente
+    /**
+     * Actualiza una tarea existente.
+     * @param task La tarea con los datos actualizados.
+     * @return La tarea actualizada.
+     * @throws IllegalArgumentException Si el ID de la tarea es inválido.
+     * @throws RuntimeException Si no se encuentra la tarea o no se puede actualizar.
+     */
     public TaskEntity updateTask(TaskEntity task) {
         System.out.println("Actualizando tarea con ID: " + task.getId()); // Debug
 
@@ -104,7 +123,13 @@ public class TaskService {
         return taskRepository.findById(task.getId());
     }
 
-    // Eliminar una tarea por ID
+    /**
+     * Elimina una tarea por su ID.
+     * @param id El ID de la tarea a eliminar.
+     * @return true si la eliminación fue exitosa.
+     * @throws IllegalArgumentException Si el ID de la tarea es inválido.
+     * @throws RuntimeException Si no se puede eliminar la tarea.
+     */
     public boolean deleteTask(int id) {
         if (id <= 0) {
             throw new IllegalArgumentException("ID de tarea inválido");
@@ -115,7 +140,12 @@ public class TaskService {
         return true;
     }
 
-    // Obtener tareas por estado (Ejemplo adicional)
+    /**
+     * Obtiene tareas filtradas por estado.
+     * @param status El estado por el que filtrar (ej. "PENDING", "COMPLETED").
+     * @return Lista de tareas que coinciden con el estado.
+     * @throws IllegalArgumentException Si el estado es nulo o vacío.
+     */
     public List<TaskEntity> getTasksByStatus(String status) {
         if (status == null || status.isEmpty()) {
             throw new IllegalArgumentException("El estado no puede estar vacío");
@@ -125,7 +155,12 @@ public class TaskService {
                 .toList();
     }
 
-    // Obtener tareas por usuario (Ejemplo adicional)
+    /**
+     * Obtiene tareas filtradas por ID de usuario.
+     * @param userId El ID del usuario cuyas tareas se quieren obtener.
+     * @return Lista de tareas asignadas al usuario.
+     * @throws IllegalArgumentException Si el ID de usuario es inválido.
+     */
     public List<TaskEntity> getTasksByUserId(int userId) {
         if (userId <= 0) {
             throw new IllegalArgumentException("ID de usuario inválido");
@@ -187,12 +222,21 @@ public class TaskService {
                 .collect(Collectors.toList()); // Recolectamos los resultados en una nueva lista
     }
 
+    /**
+     * Obtiene la ubicación del usuario autenticado en formato WKT.
+     * @return La ubicación en formato WKT.
+     */
     private String getAuthenticatedUserLocationWKT() {
         int userId = userService.getAuthenticatedUserId();
         String location = userService.getAuthenticatedUserLocation();
-        return location; // Ya viene en formato WKT desde la BD
+        return location;
     }
 
+    /**
+     * Valida que la ubicación exista.
+     * @param locationWKT La ubicación a validar.
+     * @throws RuntimeException Si la ubicación es nula o vacía.
+     */
     private void validateLocationExists(String locationWKT) {
         if (locationWKT == null || locationWKT.trim().isEmpty()) {
             throw new RuntimeException("El usuario no tiene ubicación registrada");

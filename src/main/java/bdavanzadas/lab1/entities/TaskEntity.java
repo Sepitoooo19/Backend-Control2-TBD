@@ -11,6 +11,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TaskEntity {
 
+    /**
+     *
+     *  La clase TaskEntity representa una tarea en el sistema.
+     *  Esta clase contiene información sobre la tarea, incluyendo su ID, título, descripción,
+     *  fecha de vencimiento, estado, usuario asignado, sector asociado y ubicación geográfica.
+     *
+     */
+
     @Schema(description = "ID de la tarea", example = "1")
     private int id;
 
